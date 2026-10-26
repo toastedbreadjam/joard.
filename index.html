@@ -1,0 +1,1402 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="theme-color" content="#07110b" />
+  <meta name="description" content="joard. — an infinite collaborative whiteboard with a Matrix-inspired, Modrinth-green interface." />
+  <title>joard. — Infinite Collaborative Whiteboard</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --ink: #202638;
+      --muted: #7b8497;
+      --line: #e7eaf1;
+      --panel: #ffffff;
+      --canvas: #ffffff;
+      --app-bg: #f5f7fb;
+      --accent: #6158e8;
+      --accent-dark: #4f46d4;
+      --accent-soft: #eeedff;
+      --green: #22a06b;
+      --shadow: 0 8px 28px rgba(31, 41, 71, .08);
+    }
+    * { box-sizing: border-box; }
+    html, body { height: 100%; margin: 0; }
+    body { background: var(--app-bg); color: var(--ink); font: 14px/1.4 Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; overflow: hidden; }
+    button, input, textarea { font: inherit; }
+    button { color: inherit; }
+    .app { height: 100%; display: flex; flex-direction: column; min-width: 700px; }
+    .topbar { height: 66px; flex: 0 0 66px; display: flex; align-items: center; gap: 18px; padding: 0 22px; background: #fff; border-bottom: 1px solid var(--line); z-index: 5; }
+    .brand { display: flex; align-items: center; gap: 10px; min-width: 208px; }
+    .brand-mark { width: 34px; height: 34px; display: grid; place-items: center; border-radius: 11px; background: linear-gradient(145deg,#726aff,#5147d7); color: white; box-shadow: 0 5px 12px #6158e835; }
+    .brand-mark svg { width: 22px; height: 22px; }
+    .brand-name { font-size: 16px; font-weight: 760; letter-spacing: -.55px; }
+    .brand-sub { font-size: 10px; color: #9098a9; letter-spacing: 1.2px; text-transform: uppercase; margin-top: -2px; }
+    .room-meta { display: flex; flex-direction: column; min-width: 130px; max-width: 250px; gap: 2px; }
+    .room-title { font-size: 13px; font-weight: 690; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .room-id { color: var(--muted); font-size: 11px; display: flex; align-items: center; gap: 5px; }
+    .room-id::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: #a1a8b7; }
+    .room-id.online::before { background: var(--green); box-shadow: 0 0 0 3px #22a06b19; }
+    .top-spacer { flex: 1; }
+    .top-actions { display: flex; align-items: center; gap: 7px; }
+    .icon-button { height: 36px; min-width: 36px; border: 1px solid transparent; background: transparent; border-radius: 9px; display: inline-flex; align-items: center; justify-content: center; gap: 7px; cursor: pointer; color: #586176; transition: background .15s, border .15s, color .15s; }
+    .icon-button svg { width: 17px; height: 17px; stroke-width: 1.8; }
+    .icon-button:hover { background: #f4f5fa; border-color: #eceef5; color: var(--ink); }
+    .icon-button:disabled { opacity: .35; cursor: default; }
+    .top-divider { width: 1px; height: 26px; background: var(--line); margin: 0 4px; }
+    .button { border: 1px solid var(--line); background: #fff; border-radius: 9px; padding: 9px 13px; display: inline-flex; align-items: center; justify-content: center; gap: 8px; font-weight: 650; font-size: 12px; cursor: pointer; white-space: nowrap; transition: .15s; }
+    .button svg { width: 15px; height: 15px; }
+    .button:hover { background: #f7f8fc; }
+    .button.primary { background: var(--accent); border-color: var(--accent); color: white; box-shadow: 0 4px 12px #6158e828; }
+    .button.primary:hover { background: var(--accent-dark); }
+    .workspace { display: grid; grid-template-columns: 76px minmax(0,1fr) 232px; flex: 1; min-height: 0; }
+    .left-rail { background: #fff; border-right: 1px solid var(--line); display: flex; flex-direction: column; align-items: center; padding: 17px 10px 12px; gap: 13px; z-index: 3; }
+    .tool-group { width: 100%; display: flex; flex-direction: column; align-items: center; gap: 5px; }
+    .group-label { font-size: 9px; color: #9ba2b2; font-weight: 760; letter-spacing: 1px; margin-bottom: 3px; }
+    .tool { height: 40px; width: 42px; border: 1px solid transparent; border-radius: 11px; background: transparent; color: #657086; display: grid; place-items: center; cursor: pointer; position: relative; }
+    .tool svg { width: 19px; height: 19px; stroke-width: 1.8; }
+    .tool:hover { color: var(--accent); background: #f6f5ff; }
+    .tool.active { color: var(--accent); border-color: #dddbff; background: var(--accent-soft); box-shadow: inset 0 0 0 1px #ffffff; }
+    .tool.active::after { content: ""; width: 3px; height: 17px; position: absolute; left: -11px; background: var(--accent); border-radius: 0 3px 3px 0; }
+    .rail-separator { width: 34px; height: 1px; background: var(--line); }
+    .rail-bottom { margin-top: auto; display: flex; flex-direction: column; gap: 7px; align-items: center; }
+    .color-holder { position: relative; }
+    .current-color { width: 28px; height: 28px; border: 3px solid #fff; outline: 1px solid #dfe3ec; border-radius: 50%; cursor: pointer; padding: 0; }
+    .color-swatch-row { display: grid; grid-template-columns: repeat(3, 16px); gap: 6px; padding: 2px 0; }
+    .swatch { width: 16px; height: 16px; border: 1px solid #00000013; border-radius: 50%; cursor: pointer; padding: 0; }
+    .swatch.selected { outline: 2px solid #7c73ff; outline-offset: 2px; }
+    .workspace-center { min-width: 0; min-height: 0; display: flex; flex-direction: column; position: relative; }
+    .canvas-toolbar { height: 50px; flex: 0 0 50px; display: flex; align-items: center; gap: 9px; padding: 0 20px; background: var(--app-bg); }
+    .tool-description { display: flex; align-items: center; gap: 7px; color: #4c556a; font-weight: 650; font-size: 12px; }
+    .tool-description svg { width: 15px; height: 15px; color: var(--accent); }
+    .toolbar-separator { height: 22px; width: 1px; background: #e0e4ed; margin: 0 3px; }
+    .size-label { color: #80889b; font-size: 11px; }
+    .size-slider { width: 106px; accent-color: var(--accent); cursor: pointer; }
+    .size-value { font-size: 11px; color: #586176; min-width: 20px; text-align: right; }
+    .canvas-hint { color: #9299a8; font-size: 11px; margin-left: auto; white-space: nowrap; }
+    .board-wrap { flex: 1; min-height: 0; position: relative; overflow: hidden; padding: 0 20px 20px; }
+    .board-stage { position: relative; width: 100%; height: 100%; overflow: hidden; background-color: #fff; border: 1px solid #e5e8f0; border-radius: 13px; box-shadow: 0 6px 24px rgba(30,42,71,.075); }
+    .board-stage.grid-on { background-image: none; }
+    #boardCanvas { width: 100%; height: 100%; position: absolute; inset: 0; touch-action: none; cursor: crosshair; }
+    #cursorLayer { position: absolute; inset: 0; pointer-events: none; overflow: hidden; }
+    .remote-cursor { position: absolute; top: 0; left: 0; transform: translate(-2px,-2px); transition: left .07s linear, top .07s linear; z-index: 4; }
+    .remote-cursor svg { width: 19px; height: 19px; filter: drop-shadow(0 1px 1px #0002); }
+    .remote-cursor span { display: block; margin: -1px 0 0 13px; border-radius: 4px 4px 4px 0; padding: 3px 6px; color: white; font-size: 10px; font-weight: 650; white-space: nowrap; box-shadow: 0 2px 5px #0002; }
+    .right-panel { background: #fff; border-left: 1px solid var(--line); padding: 20px 16px; overflow-y: auto; }
+    .panel-heading { font-size: 11px; font-weight: 760; color: #9299a9; letter-spacing: 1px; text-transform: uppercase; margin: 1px 0 14px; }
+    .collab-card { border: 1px solid #e9ebf4; border-radius: 12px; padding: 13px; background: linear-gradient(145deg,#fff,#fcfcff); }
+    .collab-top { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 7px; }
+    .collab-top strong { font-size: 12px; }
+    .live-pill { color: #188456; background: #e7f7ef; font-size: 10px; font-weight: 700; border-radius: 20px; padding: 4px 7px; display: flex; align-items: center; gap: 5px; }
+    .live-pill::before { content: ""; width: 5px; height: 5px; background: currentColor; border-radius: 50%; }
+    .live-pill.offline { color: #6f7789; background: #eff1f6; }
+    .collab-copy { color: #8991a2; font-size: 11px; line-height: 1.55; }
+    .avatar-stack { display: flex; align-items: center; padding: 3px 0 0; margin-top: 9px; }
+    .avatar { border: 2px solid #fff; width: 29px; height: 29px; border-radius: 50%; color: #fff; display: grid; place-items: center; font-size: 9px; font-weight: 750; margin-left: -6px; box-shadow: 0 1px 3px #0001; }
+    .avatar:first-child { margin-left: 0; }
+    .avatar-count { font-size: 10px; color: #8790a0; margin-left: 8px; }
+    .panel-section { margin-top: 24px; }
+    .panel-section h3 { font-size: 12px; margin: 0 0 10px; }
+    .shortcut { display: flex; align-items: center; justify-content: space-between; color: #6f788c; font-size: 11px; padding: 7px 0; border-bottom: 1px solid #f0f1f6; }
+    kbd { border: 1px solid #e3e6ee; background: #f8f9fc; color: #747c8e; border-radius: 5px; padding: 2px 5px; font: 10px ui-monospace, SFMono-Regular, Menlo, monospace; }
+    .tip-card { padding: 12px; background: #f7f6ff; border: 1px solid #ebe9ff; border-radius: 10px; margin-top: 22px; }
+    .tip-title { display: flex; gap: 7px; align-items: center; font-size: 11px; font-weight: 750; color: #5148c5; margin-bottom: 6px; }
+    .tip-title svg { width: 15px; height: 15px; }
+    .tip-card p { margin: 0; color: #777d9a; font-size: 10.5px; line-height: 1.6; }
+    .bottom-status { height: 28px; flex: 0 0 28px; display: flex; align-items: center; gap: 18px; padding: 0 19px; background: #fff; border-top: 1px solid var(--line); color: #969dae; font-size: 10px; }
+    .status-item { display: flex; align-items: center; gap: 6px; }
+    .status-item svg { width: 12px; height: 12px; }
+    .status-right { margin-left: auto; }
+    .toast-stack { position: fixed; right: 22px; bottom: 44px; z-index: 40; display: flex; flex-direction: column; gap: 8px; pointer-events: none; }
+    .toast { background: #22283a; color: #fff; padding: 11px 14px; border-radius: 9px; box-shadow: 0 8px 24px #20263827; font-size: 12px; max-width: 320px; animation: toast-in .18s ease-out; }
+    @keyframes toast-in { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+    .modal-backdrop { position: fixed; inset: 0; background: #20263855; backdrop-filter: blur(3px); z-index: 50; display: none; align-items: center; justify-content: center; padding: 18px; }
+    .modal-backdrop.open { display: flex; }
+    .modal { width: min(470px,100%); border: 1px solid #e8eaf2; border-radius: 16px; background: #fff; box-shadow: 0 20px 70px #18213f35; padding: 22px; }
+    .modal-head { display: flex; align-items: flex-start; gap: 12px; margin-bottom: 18px; }
+    .modal-icon { width: 37px; height: 37px; border-radius: 11px; background: var(--accent-soft); color: var(--accent); display: grid; place-items: center; flex: 0 0 auto; }
+    .modal-icon svg { width: 19px; height: 19px; }
+    .modal-head h2 { font-size: 16px; margin: 0 0 4px; letter-spacing: -.3px; }
+    .modal-head p { font-size: 11px; line-height: 1.55; color: #7f8799; margin: 0; }
+    .modal-close { margin-left: auto; border: 0; background: transparent; color: #9aa1b0; cursor: pointer; padding: 3px; }
+    .modal-close svg { width: 17px; height: 17px; }
+    .field { margin: 13px 0; }
+    .field label { display: block; color: #596276; font-weight: 680; font-size: 11px; margin-bottom: 6px; }
+    .field input, .field textarea { width: 100%; padding: 10px 11px; border: 1px solid #e0e4ed; background: #fbfcfe; border-radius: 8px; outline: none; font-size: 12px; color: var(--ink); }
+    .field textarea { min-height: 95px; resize: vertical; line-height: 1.55; }
+    .field input:focus, .field textarea:focus { border-color: #a8a2ff; box-shadow: 0 0 0 3px #6158e818; background: #fff; }
+    .field-help { display: block; color: #969dae; font-size: 10px; margin-top: 5px; line-height: 1.5; }
+    .modal-actions { display: flex; align-items: center; justify-content: flex-end; gap: 8px; margin-top: 19px; }
+    .modal-note { background: #fff8e7; border: 1px solid #f6e7be; color: #8d6b22; border-radius: 9px; padding: 10px 11px; font-size: 10.5px; line-height: 1.55; margin-top: 12px; }
+    .modal-note a { color: inherit; }
+    .key-note { color: #8c94a6; font-size: 10px; margin: 13px 0 0; line-height: 1.55; }
+    .modal { max-height: min(82vh, 760px); overflow-y: auto; }
+    .library-list { display: flex; flex-direction: column; gap: 8px; max-height: 47vh; overflow: auto; }
+    .library-row { display: flex; gap: 10px; align-items: center; border: 1px solid #e8ebf3; border-radius: 10px; padding: 11px; }
+    .library-row.current { border-color: #c9c5ff; background: #f8f7ff; }
+    .library-main { min-width: 0; flex: 1; }
+    .library-title { font-size: 12px; font-weight: 720; overflow-wrap: anywhere; }
+    .library-meta { font-size: 10px; color: #8a92a3; margin-top: 3px; }
+    .library-actions { display: flex; gap: 5px; }
+    .library-actions .button { padding: 7px 9px; font-size: 10px; }
+    .history-list { display: flex; flex-direction: column; gap: 8px; max-height: 52vh; overflow: auto; }
+    .history-row { display: flex; gap: 12px; align-items: center; border: 1px solid #e8ebf3; border-radius: 10px; padding: 11px; }
+    .history-copy { flex: 1; min-width: 0; }
+    .history-title { font-size: 12px; font-weight: 700; }
+    .history-meta { font-size: 10px; color: #8a92a3; line-height: 1.5; margin-top: 3px; }
+    .empty-state { padding: 20px 12px; text-align: center; font-size: 12px; line-height: 1.6; color: #8a92a3; border: 1px dashed #dfe3ec; border-radius: 10px; }
+    .toolbar-button { padding: 8px 10px; }
+    .zoom-controls { display:flex; align-items:center; gap:5px; }
+    .zoom-controls .button { padding:6px 9px; min-width:30px; height:30px; }
+    .zoom-label { min-width:48px; text-align:center; font-size:11px; color:#586176; font-variant-numeric:tabular-nums; }
+    .frame-list, .diagram-grid, .layer-list { display:flex; flex-direction:column; gap:8px; max-height:48vh; overflow:auto; }
+    .diagram-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); }
+    .diagram-choice { display:flex; flex-direction:column; align-items:flex-start; gap:5px; padding:12px; border:1px solid #e7eaf1; border-radius:10px; background:#fff; cursor:pointer; text-align:left; }
+    .diagram-choice:hover { background:#f7f6ff; border-color:#d2ceff; }
+    .diagram-choice strong { font-size:12px; }
+    .diagram-choice span { font-size:10px; color:#828a9c; line-height:1.4; }
+    .layer-row { display:flex; align-items:center; gap:8px; border:1px solid #e8ebf3; border-radius:9px; padding:9px; }
+    .layer-title { min-width:90px; flex:1; overflow-wrap:anywhere; font-size:11px; font-weight:650; }
+    .layer-controls { display:flex; flex-wrap:wrap; gap:4px; justify-content:flex-end; }
+    .layer-controls .button { padding:5px 7px; min-width:27px; font-size:10px; }
+    .layer-muted { color:#969dae; text-decoration:line-through; }
+    .board-stage.panning { cursor:grabbing; }
+    .board-stage.panning #boardCanvas { cursor:grabbing !important; }
+    @media (max-width: 780px) { .top-actions .library-label { display: none; } .library-actions { flex-direction: column; } }
+    .hidden { display: none !important; }
+    @media (max-width: 1120px) {
+      .workspace { grid-template-columns: 68px minmax(0,1fr); }
+      .right-panel { display: none; }
+      .brand { min-width: 175px; }
+      .canvas-hint { display: none; }
+    }
+    @media (max-width: 780px) {
+      .app { min-width: 0; }
+      .topbar { padding: 0 12px; gap: 10px; }
+      .brand { min-width: 36px; }
+      .brand-text { display: none; }
+      .room-meta { min-width: 90px; }
+      .top-actions { gap: 2px; }
+      .top-actions .optional-mobile { display: none; }
+      .canvas-toolbar { padding: 0 12px; }
+      .board-wrap { padding: 0 9px 10px; }
+      .left-rail { padding-inline: 6px; }
+      .tool { width: 39px; }
+      .size-slider { width: 72px; }
+    }
+
+    /* joard. / Matrix terminal + Modrinth green theme */
+    :root {
+      color-scheme: dark;
+      --ink: #d9ffe4;
+      --muted: #83a991;
+      --line: #20442d;
+      --panel: #09140d;
+      --canvas: #030805;
+      --app-bg: #050b07;
+      --accent: #1bd96a;
+      --accent-dark: #13ad50;
+      --accent-soft: #12351f;
+      --green: #1bd96a;
+      --shadow: 0 12px 36px rgba(0,0,0,.28);
+    }
+    body { background: #050b07; color: var(--ink); }
+    .topbar,.left-rail,.right-panel,.bottom-status { background: #08120b !important; border-color: #1d3e28 !important; color: #c8f7d4; }
+    .topbar { box-shadow: 0 4px 24px rgba(0,0,0,.23); }
+    .brand-mark { background: linear-gradient(145deg,#7cffb2,#1bd96a 55%,#087b39) !important; color:#031008; box-shadow: 0 0 22px #1bd96a24; }
+    .brand-name { color:#e8fff0; letter-spacing:.2px; }
+    .brand-sub,.room-id,.panel-heading,.group-label,.size-label,.size-value,.canvas-hint,.bottom-status,.avatar-count { color:#789d83 !important; }
+    .room-title { color:#cfffda; }
+    .room-id.online::before { background:#1bd96a; box-shadow:0 0 0 3px #1bd96a25; }
+    .top-divider,.toolbar-separator,.rail-separator { background:#20442d !important; }
+    .button,.icon-button,.tool { color:#a9d9b6; border-color:#254b32; background:#0d1b12; }
+    .button:hover,.icon-button:hover { background:#14301e !important; color:#e4ffeb !important; border-color:#31864d !important; }
+    .button.primary { color:#031008 !important; background:#1bd96a !important; border-color:#1bd96a !important; box-shadow:0 0 20px #1bd96a24; }
+    .button.primary:hover { background:#7cffb2 !important; border-color:#7cffb2 !important; }
+    .tool { background:transparent; }
+    .tool:hover,.tool.active { color:#7cffb2 !important; background:#12351f !important; border-color:#287b43 !important; }
+    .tool.active::after { background:#1bd96a !important; }
+    .tool-description { color:#b8e9c5; }
+    .tool-description svg { color:#1bd96a; }
+    .size-slider,.current-color { accent-color:#1bd96a; }
+    .current-color { border-color:#0a170e; outline-color:#2e6840; }
+    .swatch { border-color:#24442d; }
+    .swatch.selected { outline:2px solid #7cffb2 !important; }
+    .canvas-toolbar { background:#071009 !important; border-bottom:1px solid #183622; }
+    .board-wrap { background:#050b07; }
+    .board-stage { background-color:#030805 !important; border-color:#28543a !important; box-shadow:inset 0 0 50px #1bd96a09, 0 10px 32px #0008 !important; }
+    .board-stage::before { content:""; position:absolute; inset:-110% 0; z-index:0; pointer-events:none; opacity:.33; background-image:repeating-linear-gradient(90deg,transparent 0 27px,rgba(27,217,106,.055) 28px 29px,transparent 30px 54px),repeating-linear-gradient(180deg,transparent 0 13px,rgba(27,217,106,.16) 14px 15px,transparent 16px 43px); animation:joard-rain 44s linear infinite; }
+    .board-stage::after { content:"01  10  11  00  01  10  01  11  00  10  01  00  11  01  10  00"; position:absolute; inset:-30% 0; z-index:0; pointer-events:none; overflow:hidden; white-space:pre-wrap; overflow-wrap:anywhere; font:12px/2.5 ui-monospace,SFMono-Regular,Consolas,monospace; letter-spacing:10px; color:#1bd96a; opacity:.09; animation:joard-code 58s linear infinite; }
+    #boardCanvas { z-index:1; }
+    #cursorLayer { z-index:2; }
+    @keyframes joard-rain { from { transform:translateY(-6%); } to { transform:translateY(28%); } }
+    @keyframes joard-code { from { transform:translateY(-4%); } to { transform:translateY(18%); } }
+    .right-panel { box-shadow: inset 1px 0 #102618; }
+    .collab-card { background:linear-gradient(145deg,#0c1a10,#08120b) !important; border-color:#20442d !important; }
+    .collab-top strong,.panel-section h3 { color:#cfffda; }
+    .live-pill { background:#123b23 !important; color:#7cffb2 !important; }
+    .live-pill.offline { background:#1a281e !important; color:#9eb4a3 !important; }
+    .avatar { border-color:#08120b !important; color:#031008 !important; }
+    .shortcut { color:#a3c9ad !important; border-color:#193522 !important; }
+    kbd { background:#0e2115 !important; border-color:#2a5739 !important; color:#c7f8d3 !important; }
+    .tip-card { background:#10291a !important; border-color:#225c37 !important; }
+    .tip-title { color:#7cffb2 !important; }
+    .tip-card p,.collab-copy { color:#9bbda5 !important; }
+    .bottom-status { border-top-color:#1d3e28 !important; }
+    .toast { background:#11291a !important; border:1px solid #2c6b40; color:#d9ffe4 !important; box-shadow:0 8px 30px #0008; }
+    .modal-backdrop { background:rgba(0,5,2,.78) !important; }
+    .modal { background:#08140c !important; border-color:#28553a !important; box-shadow:0 24px 90px #000b !important; color:#d9ffe4; }
+    .modal-head h2 { color:#e1ffea; }
+    .modal-head p,.field-help,.key-note { color:#8fb79a !important; }
+    .modal-icon { background:#12351f !important; color:#7cffb2 !important; }
+    .modal-close { color:#8db99a !important; }
+    .field label { color:#b9eac5 !important; }
+    .field input,.field textarea,.field select { background:#051008 !important; border-color:#28553a !important; color:#e1ffea !important; }
+    .field input:focus,.field textarea:focus { border-color:#1bd96a !important; box-shadow:0 0 0 3px #1bd96a22 !important; background:#07140b !important; }
+    .modal-note { background:#122a1a !important; border-color:#315a34 !important; color:#b5ff3d !important; }
+    .library-row,.history-row,.layer-row { background:#0b1a10 !important; border-color:#24492f !important; }
+    .library-row.current { background:#12351f !important; border-color:#1bd96a !important; }
+    .library-title,.history-title,.layer-title { color:#d1f9da; }
+    .library-meta,.history-meta { color:#8fb79a !important; }
+    .empty-state { color:#8fb79a !important; border-color:#2a5035 !important; }
+    .diagram-choice { background:#0b1a10 !important; border-color:#24492f !important; color:#d9ffe4 !important; }
+    .diagram-choice:hover { background:#12351f !important; border-color:#1bd96a !important; }
+    .diagram-choice span { color:#8fb79a !important; }
+    .zoom-label { color:#b5e8c0 !important; }
+    .board-stage.panning { cursor:grabbing; }
+    @media (prefers-reduced-motion: reduce) { .board-stage::before,.board-stage::after { animation:none; } }
+    @media (max-width: 780px) { .top-actions { gap:4px; } .top-actions .button { padding:7px 8px; } }
+
+
+    .template-grid { margin-bottom:4px; }
+    .reaction-grid { display:grid; grid-template-columns:repeat(5,minmax(0,1fr)); gap:8px; }
+    .reaction-choice { min-height:84px; padding:10px 4px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:6px; border:1px solid #24492f; border-radius:10px; background:#0b1a10; color:#d9ffe4; cursor:pointer; }
+    .reaction-choice span { font-size:28px; line-height:1.2; }
+    .reaction-choice small { font-size:10px; text-align:center; color:#8fb79a; }
+    .reaction-choice:hover { background:#12351f; border-color:#1bd96a; transform:translateY(-1px); }
+    @media (max-width:600px) { .reaction-grid { grid-template-columns:repeat(4,minmax(0,1fr)); } }
+
+  </style>
+</head>
+<body>
+  <div class="app">
+    <header class="topbar">
+      <div class="brand">
+        <div class="brand-mark" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M4 16.5 7.7 5l4.2 13 3.2-9 2.2 6.1L20 8"/><path d="M3 20h18" opacity=".8"/></svg></div>
+        <div class="brand-text"><div class="brand-name">joard.</div><div class="brand-sub">Ideas in motion</div></div>
+      </div>
+      <div class="room-meta"><div class="room-title" id="roomTitle">Untitled whiteboard</div><div class="room-id" id="connectionLabel">Local board · not synced</div></div>
+      <div class="top-spacer"></div>
+      <div class="top-actions">
+        <button class="icon-button" id="undoBtn" title="Undo (Ctrl+Z)" aria-label="Undo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M9 14 4 9l5-5"/><path d="M4 9h9a7 7 0 0 1 0 14h-2"/></svg></button>
+        <button class="icon-button" id="redoBtn" title="Redo (Ctrl+Shift+Z)" aria-label="Redo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="m15 14 5-5-5-5"/><path d="M20 9h-9a7 7 0 0 0 0 14h2"/></svg></button>
+        <button class="button toolbar-button" id="boardsBtn" title="Open your saved whiteboards"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M7 8h10M7 12h7M7 16h4"/></svg><span class="library-label">Boards</span></button>
+        <button class="button toolbar-button optional-mobile" id="historyBtn" title="Revision history"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5M12 7v5l3 2"/></svg><span class="library-label">History</span></button>
+        <button class="button toolbar-button optional-mobile" id="saveBtn" title="Save this whiteboard now"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M5 3h12l4 4v14H3V3h2Z"/><path d="M7 3v6h10V3M7 21v-8h10v8"/></svg><span class="library-label">Save</span></button>
+        <button class="button toolbar-button optional-mobile" id="framesBtn" title="Navigate named frames">Frames</button>
+        <button class="button toolbar-button optional-mobile" id="templatesBtn" title="Insert a planning or brainstorming template">Templates</button>
+        <button class="button toolbar-button optional-mobile" id="reactionsBtn" title="Stamp a reaction or vote on the board">Reactions</button>
+        <button class="button toolbar-button optional-mobile" id="diagramsBtn" title="Insert diagram shapes">Diagrams</button>
+        <button class="button toolbar-button optional-mobile" id="layersBtn" title="Manage object visibility, locks, and order">Layers</button>
+        <span class="top-divider"></span>
+        <button class="icon-button optional-mobile" id="gridBtn" title="Toggle dot grid" aria-label="Toggle dot grid"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round"><circle cx="5" cy="5" r="1"/><circle cx="12" cy="5" r="1"/><circle cx="19" cy="5" r="1"/><circle cx="5" cy="12" r="1"/><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="19" r="1"/><circle cx="12" cy="19" r="1"/><circle cx="19" cy="19" r="1"/></svg></button>
+        <button class="icon-button optional-mobile" id="downloadBtn" title="Export as PNG" aria-label="Export as PNG"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12m-5-5 5 5 5-5"/><path d="M5 17v3h14v-3"/></svg></button>
+        <button class="icon-button" id="settingsBtn" title="Connection settings" aria-label="Connection settings"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="m19.4 15 .1.1 1.2.9-1.2 2.1-1.4-.5a7.8 7.8 0 0 1-1.6.9l-.2 1.5h-2.5l-.2-1.5a7.8 7.8 0 0 1-1.7-.9l-1.4.5-1.2-2.1 1.2-.9a7.3 7.3 0 0 1 0-2l-1.2-.9 1.2-2.1 1.4.5a7.8 7.8 0 0 1 1.7-.9l.2-1.5h2.5l.2 1.5a7.8 7.8 0 0 1 1.6.9l1.4-.5 1.2 2.1-1.2.9a7.3 7.3 0 0 1 0 2Z" transform="translate(-1 -1) scale(.94)"/></svg></button>
+        <button class="button primary" id="shareBtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="m8.7 10.7 6.6-4.4M8.7 13.3l6.6 4.4"/></svg> Share board</button>
+      </div>
+    </header>
+
+    <div class="workspace">
+      <aside class="left-rail" aria-label="Drawing tools">
+        <div class="tool-group">
+          <div class="group-label">TOOLS</div>
+          <button class="tool" data-tool="select" title="Select and move (V)" aria-label="Select and move"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="m5 3 14 10-7 .8-3.3 6.2L5 3Z"/></svg></button>
+          <button class="tool active" data-tool="pen" title="Pen (P)" aria-label="Pen"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="m4 20 4.5-1 10.8-10.8a2.1 2.1 0 0 0-3-3L5.5 16 4 20Z"/><path d="m14.8 6.2 3 3"/></svg></button>
+          <button class="tool" data-tool="highlighter" title="Highlighter (H)" aria-label="Highlighter"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="m14 4 6 6-9.5 9.5H4v-6L14 4Z"/><path d="m11 7 6 6M3 22h18"/></svg></button>
+          <button class="tool" data-tool="eraser" title="Pixel eraser (E)" aria-label="Eraser"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="m7 20-4-4a2 2 0 0 1 0-2.8l8.5-8.5a2 2 0 0 1 2.8 0l6 6a2 2 0 0 1 0 2.8L13 20H7Z"/><path d="m8 9 7 7M13 20h8"/></svg></button>
+        </div>
+        <div class="rail-separator"></div>
+        <div class="tool-group">
+          <div class="group-label">SHAPES</div>
+          <button class="tool" data-tool="line" title="Line (L)" aria-label="Line"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round"><path d="M5 19 19 5"/><circle cx="5" cy="19" r="1.2"/><circle cx="19" cy="5" r="1.2"/></svg></button>
+          <button class="tool" data-tool="arrow" title="Arrow (A)" aria-label="Arrow"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20 19 5M9 5h10v10"/></svg></button>
+          <button class="tool" data-tool="rect" title="Rectangle (R)" aria-label="Rectangle"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linejoin="round"><rect x="4" y="5" width="16" height="14" rx="1.5"/></svg></button>
+          <button class="tool" data-tool="ellipse" title="Ellipse (O)" aria-label="Ellipse"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><ellipse cx="12" cy="12" rx="8" ry="6.5"/></svg></button>
+        </div>
+        <div class="rail-separator"></div>
+        <div class="tool-group">
+          <div class="group-label">ADD</div>
+          <button class="tool" data-tool="text" title="Text (T)" aria-label="Text"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6V4h16v2M12 4v16m-4 0h8"/></svg></button>
+          <button class="tool" data-tool="sticky" title="Sticky note (N)" aria-label="Sticky note"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linejoin="round"><path d="M5 3h14v13l-5 5H5V3Z"/><path d="M14 21v-5h5"/></svg></button>
+        </div>
+        <div class="rail-bottom">
+          <div class="rail-separator"></div>
+          <div class="color-holder" title="Current color">
+            <input class="current-color" type="color" id="colorPicker" value="#1bd96a" aria-label="Choose drawing color" />
+          </div>
+          <div class="color-swatch-row" aria-label="Quick colors">
+            <button class="swatch selected" style="background:#1bd96a" data-color="#1bd96a" title="Modrinth green" aria-label="Modrinth green"></button>
+            <button class="swatch" style="background:#7cffb2" data-color="#7cffb2" title="Mint" aria-label="Mint"></button>
+            <button class="swatch" style="background:#b5ff3d" data-color="#b5ff3d" title="Lime" aria-label="Lime"></button>
+            <button class="swatch" style="background:#00b894" data-color="#00b894" title="Teal" aria-label="Teal"></button>
+            <button class="swatch" style="background:#90e0ef" data-color="#90e0ef" title="Ice blue" aria-label="Ice blue"></button>
+            <button class="swatch" style="background:#ffd166" data-color="#ffd166" title="Amber" aria-label="Amber"></button>
+          </div>
+        </div>
+      </aside>
+
+      <main class="workspace-center">
+        <div class="canvas-toolbar">
+          <div class="tool-description" id="activeToolLabel"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m4 20 4.5-1 10.8-10.8a2.1 2.1 0 0 0-3-3L5.5 16 4 20Z"/></svg><span>Pen</span></div>
+          <span class="toolbar-separator"></span>
+          <span class="size-label">Stroke</span>
+          <input type="range" class="size-slider" id="strokeSize" min="1" max="18" value="3" aria-label="Stroke width" />
+          <span class="size-value" id="strokeValue">3 px</span>
+          <span class="toolbar-separator"></span>
+          <div class="zoom-controls" aria-label="Canvas zoom controls">
+            <button class="button" id="zoomOutBtn" title="Zoom out (−)" aria-label="Zoom out">−</button>
+            <span class="zoom-label" id="zoomLabel">100%</span>
+            <button class="button" id="zoomInBtn" title="Zoom in (+)" aria-label="Zoom in">+</button>
+            <button class="button" id="fitBoardBtn" title="Fit all visible objects (F)">Fit</button>
+          </div>
+          <span class="canvas-hint">Right-drag to pan · wheel or buttons to zoom</span>
+        </div>
+        <div class="board-wrap">
+          <div class="board-stage grid-on" id="boardStage">
+            <canvas id="boardCanvas" aria-label="Whiteboard drawing area"></canvas>
+            <div id="cursorLayer" aria-hidden="true"></div>
+          </div>
+        </div>
+      </main>
+
+      <aside class="right-panel">
+        <div class="panel-heading">Workspace</div>
+        <div class="collab-card">
+          <div class="collab-top"><strong>People here</strong><span class="live-pill offline" id="livePill">Local only</span></div>
+          <div class="collab-copy" id="collabCopy">This board is saved in this browser. Connect a sync project to collaborate live.</div>
+          <div class="avatar-stack" id="avatarStack"><div class="avatar" style="background:#1bd96a;margin-left:0">ME</div><span class="avatar-count">You</span></div>
+        </div>
+        <div class="panel-section">
+          <h3>Quick shortcuts</h3>
+          <div class="shortcut"><span>Select / move</span><kbd>V</kbd></div>
+          <div class="shortcut"><span>Pen</span><kbd>P</kbd></div>
+          <div class="shortcut"><span>Highlighter</span><kbd>H</kbd></div>
+          <div class="shortcut"><span>Eraser</span><kbd>E</kbd></div>
+          <div class="shortcut"><span>Text</span><kbd>T</kbd></div>
+          <div class="shortcut"><span>Undo</span><kbd>Ctrl Z</kbd></div>
+          <div class="shortcut"><span>Redo</span><kbd>Ctrl ⇧ Z</kbd></div>
+          <div class="shortcut"><span>Copy selected object</span><kbd>Ctrl C</kbd></div>
+          <div class="shortcut"><span>Paste text / image / object</span><kbd>Ctrl V</kbd></div>
+          <div class="shortcut"><span>Delete selection</span><kbd>Del / Backspace</kbd></div>
+          <div class="shortcut"><span>Zoom in / out</span><kbd>+ / −</kbd></div>
+          <div class="shortcut"><span>Fit board</span><kbd>F</kbd></div>
+          <div class="shortcut"><span>Pan canvas</span><kbd>Right-drag</kbd></div>
+        </div>
+        <div class="tip-card"><div class="tip-title"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18h6M10 22h4M8 14c-1.2-1-2-2.5-2-4.2a6 6 0 1 1 12 0c0 1.7-.8 3.2-2 4.2-.7.6-1 1-1 2h-6c0-1-.3-1.4-1-2Z"/></svg>Small tip</div><p>Right-click and drag to move around the infinite canvas. Use the zoom controls or mouse wheel to zoom. Ctrl+C copies a selected object; Ctrl+V pastes text, images, or a copied joard. object. Boards autosave locally; connect Supabase for cloud collaboration.</p></div>
+        <div class="panel-section"><button class="button" id="clearBtn" style="width:100%; color:#c24b55"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M10 11v6m4-6v6M6 7l1 14h10l1-14M9 7V4h6v3"/></svg>Clear whiteboard</button></div>
+      </aside>
+    </div>
+
+    <footer class="bottom-status">
+      <span class="status-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M8 8h8M8 12h5"/></svg><span id="statusBoardName">Untitled whiteboard</span></span>
+      <span class="status-item" id="coordLabel">x: —, y: —</span>
+      <span class="status-item" id="itemCount">0 objects</span>
+      <span class="status-item status-right" id="syncStatus">Saved locally</span>
+    </footer>
+  </div>
+
+  <div class="toast-stack" id="toastStack" aria-live="polite"></div>
+
+  <div class="modal-backdrop" id="modalBackdrop" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+    <div class="modal" id="modalCard">
+      <div class="modal-head">
+        <div class="modal-icon" id="modalIcon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg></div>
+        <div><h2 id="modalTitle">Share this board</h2><p id="modalDescription">Invite people to draw on this whiteboard with you.</p></div>
+        <button class="modal-close" id="modalClose" aria-label="Close dialog"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="m6 6 12 12M18 6 6 18"/></svg></button>
+      </div>
+      <div id="modalBody"></div>
+      <div class="modal-actions" id="modalActions"></div>
+    </div>
+  </div>
+
+  <script type="module">
+    import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+
+    const $ = (selector) => document.querySelector(selector);
+    const $$ = (selector) => [...document.querySelectorAll(selector)];
+    const svgIcons = {
+      pen: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="m4 20 4.5-1 10.8-10.8a2.1 2.1 0 0 0-3-3L5.5 16 4 20Z"/><path d="m14.8 6.2 3 3"/></svg>',
+      highlighter: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="m14 4 6 6-9.5 9.5H4v-6L14 4Z"/><path d="m11 7 6 6M3 22h18"/></svg>',
+      eraser: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="m7 20-4-4a2 2 0 0 1 0-2.8l8.5-8.5a2 2 0 0 1 2.8 0l6 6a2 2 0 0 1 0 2.8L13 20H7Z"/><path d="m8 9 7 7M13 20h8"/></svg>',
+      select: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="m5 3 14 10-7 .8-3.3 6.2L5 3Z"/></svg>',
+      line: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round"><path d="M5 19 19 5"/><circle cx="5" cy="19" r="1.2"/><circle cx="19" cy="5" r="1.2"/></svg>',
+      arrow: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20 19 5M9 5h10v10"/></svg>',
+      rect: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linejoin="round"><rect x="4" y="5" width="16" height="14" rx="1.5"/></svg>',
+      ellipse: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><ellipse cx="12" cy="12" rx="8" ry="6.5"/></svg>',
+      text: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6V4h16v2M12 4v16m-4 0h8"/></svg>',
+      sticky: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linejoin="round"><path d="M5 3h14v13l-5 5H5V3Z"/><path d="M14 21v-5h5"/></svg>'
+    };
+    const toolNames = { select:'Select', pen:'Pen', highlighter:'Highlighter', eraser:'Eraser', line:'Line', arrow:'Arrow', rect:'Rectangle', ellipse:'Ellipse', text:'Text', sticky:'Sticky note' };
+    const randomId = () => (crypto?.randomUUID ? crypto.randomUUID() : 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, c => { const r = Math.random()*16|0; return (c==='x'?r:(r&3|8)).toString(16); }));
+    const query = new URLSearchParams(location.search);
+    const roomId = query.get('room') || Math.random().toString(36).slice(2, 10);
+    if (!query.get('room')) { query.set('room', roomId); history.replaceState(null, '', `${location.pathname}?${query.toString()}${location.hash}`); }
+    const localKey = `canvasly_board_${roomId}`;
+    const boardsKey = 'canvasly_boards';
+    let boardTitle = getBoardMeta(roomId)?.title || `Whiteboard ${roomId.slice(0,6)}`;
+    const userId = localStorage.getItem('canvasly_user_id') || randomId();
+    localStorage.setItem('canvasly_user_id', userId);
+    let userName = localStorage.getItem('canvasly_user_name') || `Guest ${Math.floor(Math.random()*900+100)}`;
+    const userColor = ['#1bd96a','#7cffb2','#b5ff3d','#00b894','#90e0ef','#ffd166'][Math.abs(hashCode(userId)) % 6];
+    let activeTool = 'pen';
+    let selectedColor = '#1bd96a';
+    let strokeWidth = 3;
+    let isGridOn = true;
+    let canvas, ctx, stage;
+    let items = new Map();
+    let imageCache = new Map();
+    let lastBoardPoint = null;
+    let versionTimer = null;
+    let metaTimer = null;
+    let lastVersionSignature = '';
+    let undoStack = [], redoStack = [];
+    let draft = null, moveState = null, selectedId = null;
+    let supabase = null, channel = null, isOnline = false, connectionAttempt = 0;
+    let remoteCursors = new Map();
+    let remoteDrafts = new Map();
+    let lastCursorSent = 0;
+    let lastDraftSent = 0;
+    let pendingTextPoint = null;
+    let drawingPointer = null;
+    let camera = { x: 0, y: 0, zoom: 1 };
+    let panState = null;
+    let nextLayer = 10;
+    let clipboardObject = null;
+
+    function hashCode(s) { let h=0; for (let i=0;i<s.length;i++) h=(h*31+s.charCodeAt(i))|0; return h; }
+    function deepCopy(value) { return JSON.parse(JSON.stringify(value)); }
+    function initials(name) { return String(name || '?').trim().split(/\s+/).slice(0,2).map(p=>p[0]||'').join('').toUpperCase().slice(0,2) || '?'; }
+    function toast(message) {
+      const node = document.createElement('div'); node.className='toast'; node.textContent=message; $('#toastStack').append(node);
+      setTimeout(()=>node.remove(), 3200);
+    }
+    function showModal({title, description='', icon='', body='', actions=[]}) {
+      $('#modalTitle').textContent=title; $('#modalDescription').textContent=description;
+      $('#modalIcon').innerHTML=icon || '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>';
+      $('#modalBody').innerHTML=body; $('#modalActions').replaceChildren();
+      actions.forEach(action=>{
+        const b=document.createElement('button'); b.className=`button ${action.primary?'primary':''}`; b.textContent=action.label; b.type='button';
+        b.addEventListener('click', action.onClick); $('#modalActions').append(b);
+      });
+      $('#modalBackdrop').classList.add('open');
+    }
+    function closeModal() { $('#modalBackdrop').classList.remove('open'); }
+    $('#modalClose').addEventListener('click', closeModal);
+    $('#modalBackdrop').addEventListener('pointerdown', (e)=>{ if(e.target === $('#modalBackdrop')) closeModal(); });
+
+    function readBoardCatalog() {
+      try { const raw=JSON.parse(localStorage.getItem(boardsKey)||'[]'); return Array.isArray(raw)?raw.filter(b=>b&&b.id):[]; }
+      catch { return []; }
+    }
+    function writeBoardCatalog(list) {
+      try { localStorage.setItem(boardsKey,JSON.stringify(list.sort((a,b)=>(b.updatedAt||0)-(a.updatedAt||0)))); }
+      catch { toast('Could not update the local whiteboard list.'); }
+    }
+    function getBoardMeta(id) { return readBoardCatalog().find(b=>b.id===id)||null; }
+    function storeBoardMeta(id,title,updatedAt=Date.now()) {
+      const list=readBoardCatalog(); const i=list.findIndex(b=>b.id===id);
+      const row={id,title:String(title||'Untitled whiteboard').trim()||'Untitled whiteboard',updatedAt};
+      if(i>=0) list[i]={...list[i],...row}; else list.push(row);
+      writeBoardCatalog(list); return row;
+    }
+    function updateBoardTitleUI() {
+      $('#roomTitle').textContent=boardTitle; $('#statusBoardName').textContent=boardTitle;
+      document.title=`${boardTitle} — joard.`;
+    }
+    function scheduleBoardMetaSync() {
+      if(!isOnline||!supabase)return;
+      clearTimeout(metaTimer); metaTimer=setTimeout(()=>saveBoardMetadataRemote(),900);
+    }
+    function localSave() {
+      try {
+        localStorage.setItem(localKey, JSON.stringify([...items.values()]));
+        storeBoardMeta(roomId,boardTitle);
+        $('#syncStatus').textContent = isOnline ? 'Cloud autosaved' : 'Saved locally';
+      } catch {
+        $('#syncStatus').textContent = 'Local storage full';
+        toast('Local storage is full. Connect cloud sync or remove large pasted images.');
+      }
+      scheduleBoardMetaSync();
+      scheduleVersionSave();
+      updateCounts();
+    }
+    function loadLocal() {
+      try {
+        const data = JSON.parse(localStorage.getItem(localKey) || '[]');
+        if (Array.isArray(data)) data.forEach(item=>{ if(item && item.id) items.set(item.id,item); });
+      } catch { /* Ignore invalid local cache. */ }
+      ensureLayerNumbers();
+      try {
+        const savedView=JSON.parse(localStorage.getItem(`canvasly_view_${roomId}`)||'null');
+        if(savedView&&Number.isFinite(savedView.x)&&Number.isFinite(savedView.y)&&Number.isFinite(savedView.zoom))camera={x:savedView.x,y:savedView.y,zoom:Math.max(.08,Math.min(5,savedView.zoom))};
+      } catch {}
+      const meta=getBoardMeta(roomId); if(meta?.title)boardTitle=meta.title;
+      updateBoardTitleUI();
+    }
+    function scheduleVersionSave() {
+      clearTimeout(versionTimer);
+      versionTimer=setTimeout(()=>saveVersionNow('Autosave').catch(err=>console.error('Version save failed:',err)),2200);
+    }
+    function getLocalVersions() {
+      try { const raw=JSON.parse(localStorage.getItem(`canvasly_versions_${roomId}`)||'[]'); return Array.isArray(raw)?raw:[]; }
+      catch { return []; }
+    }
+    async function saveVersionNow(note='Autosave',force=false) {
+      const snapshot=[...items.values()].map(deepCopy);
+      const signature=JSON.stringify({title:boardTitle,items:snapshot});
+      if(!force&&signature===lastVersionSignature)return;
+      if(!force&&getLocalVersions()[0]) {
+        const latest=getLocalVersions()[0];
+        if(latest.title===boardTitle&&JSON.stringify(latest.snapshot||[])===JSON.stringify(snapshot)) {lastVersionSignature=signature;return;}
+      }
+      const entry={id:randomId(),board_id:roomId,title:boardTitle,snapshot,created_at:new Date().toISOString(),note};
+      let versions=[entry,...getLocalVersions().filter(v=>v.id!==entry.id)].slice(0,4);
+      try {
+        // If the browser quota is tight, drop old revisions before giving up on the newest one.
+        while(versions.length>1) {
+          try { localStorage.setItem(`canvasly_versions_${roomId}`,JSON.stringify(versions)); break; }
+          catch { versions.pop(); }
+        }
+        if(versions.length===1) localStorage.setItem(`canvasly_versions_${roomId}`,JSON.stringify(versions));
+      } catch { /* Cloud revisions may still save even when the local quota is full. */ }
+      lastVersionSignature=signature;
+      if(supabase&&isOnline) {
+        const {error}=await supabase.from('whiteboard_versions').insert({id:entry.id,board_id:roomId,title:boardTitle,snapshot,note,created_at:entry.created_at});
+        if(error) { console.error('Could not save revision:',error.message); $('#syncStatus').textContent='Board saved; revision save failed'; }
+        else {
+          // Keep a bounded cloud history to avoid unbounded table growth.
+          const {data:rows}=await supabase.from('whiteboard_versions').select('id').eq('board_id',roomId).order('created_at',{ascending:false}).range(50,1000);
+          if(rows?.length) await supabase.from('whiteboard_versions').delete().eq('board_id',roomId).in('id',rows.map(r=>r.id));
+        }
+      }
+    }
+    async function loadBoardMetadataRemote() {
+      if(!supabase||!isOnline)return false;
+      const {data,error}=await supabase.from('whiteboard_boards').select('id,title,updated_at').eq('id',roomId).maybeSingle();
+      if(error) {console.error('Could not load board metadata:',error.message);return false;}
+      if(data?.title) {
+        boardTitle=data.title;storeBoardMeta(roomId,boardTitle,Date.parse(data.updated_at||'')||Date.now());updateBoardTitleUI();return true;
+      }
+      return false;
+    }
+    async function saveBoardMetadataRemote() {
+      if(!supabase||!isOnline)return;
+      const {error}=await supabase.from('whiteboard_boards').upsert({id:roomId,title:boardTitle,updated_at:new Date().toISOString()});
+      if(error)console.error('Could not save board metadata:',error.message);
+    }
+    async function saveCurrentBoardNow() {
+      storeBoardMeta(roomId,boardTitle);
+      localSave();
+      if(supabase&&isOnline) {
+        await saveBoardMetadataRemote();
+        for(const item of items.values()) await emitUpsert(item);
+      }
+      await saveVersionNow('Manual save',true);
+      $('#syncStatus').textContent=isOnline?'Cloud saved':'Saved locally';
+      toast(isOnline?'Whiteboard saved to the cloud.':'Whiteboard saved in this browser.');
+    }
+    function updateCounts() {
+      $('#itemCount').textContent = `${items.size} ${items.size===1?'object':'objects'}`;
+      $('#undoBtn').disabled = undoStack.length===0; $('#redoBtn').disabled = redoStack.length===0;
+    }
+    function updateConnectionUI(state='offline') {
+      const label=$('#connectionLabel'), pill=$('#livePill');
+      if (state==='online') {
+        label.textContent=`Live collaboration · ${roomId.slice(0,8)}`; label.classList.add('online');
+        pill.textContent='Live'; pill.classList.remove('offline');
+        $('#collabCopy').textContent='People connected to this room can draw and edit together in real time.';
+        $('#syncStatus').textContent='Connected · live sync';
+      } else if (state==='connecting') {
+        label.textContent='Connecting to live sync…'; label.classList.remove('online');
+        pill.textContent='Connecting'; pill.classList.add('offline');
+        $('#collabCopy').textContent='Connecting to the shared room. Your local board stays available.';
+        $('#syncStatus').textContent='Connecting…';
+      } else {
+        label.textContent=`Local board · ${roomId.slice(0,8)}`; label.classList.remove('online');
+        pill.textContent='Local only'; pill.classList.add('offline');
+        $('#collabCopy').textContent='This board is saved in this browser. Connect a sync project to collaborate live.';
+        $('#syncStatus').textContent='Saved locally';
+      }
+      renderPresence();
+    }
+    function updateCountsAndStatus() { updateCounts(); $('#statusBoardName').textContent=$('#roomTitle').textContent; }
+
+    function setTool(tool) {
+      activeTool=tool;
+      $$('.tool').forEach(btn=>btn.classList.toggle('active',btn.dataset.tool===tool));
+      $('#activeToolLabel').innerHTML=`${svgIcons[tool] || ''}<span>${toolNames[tool] || tool}</span>`;
+      const cursor = tool==='select'?'default':tool==='text'||tool==='sticky'?'crosshair':tool==='eraser'?'cell':'crosshair';
+      canvas.style.cursor=cursor;
+    }
+    $$('.tool').forEach(btn=>btn.addEventListener('click',()=>setTool(btn.dataset.tool)));
+    $('#colorPicker').addEventListener('input',e=>setColor(e.target.value));
+    $$('.swatch').forEach(btn=>btn.addEventListener('click',()=>setColor(btn.dataset.color)));
+    function setColor(color) {
+      selectedColor=color; $('#colorPicker').value=color;
+      $$('.swatch').forEach(btn=>btn.classList.toggle('selected',btn.dataset.color.toLowerCase()===color.toLowerCase()));
+    }
+    $('#strokeSize').addEventListener('input',e=>{strokeWidth=Number(e.target.value);$('#strokeValue').textContent=`${strokeWidth} px`;});
+    $('#gridBtn').addEventListener('click',()=>{isGridOn=!isGridOn;stage.classList.toggle('grid-on',isGridOn);$('#gridBtn').style.color=isGridOn?'var(--accent)':'';render();});
+    $('#downloadBtn').addEventListener('click', downloadPNG);
+    $('#settingsBtn').addEventListener('click', openSettings);
+    $('#shareBtn').addEventListener('click', openShare);
+    $('#undoBtn').addEventListener('click', undo);
+    $('#redoBtn').addEventListener('click', redo);
+    $('#clearBtn').addEventListener('click', confirmClear);
+    $('#framesBtn').addEventListener('click', openFrames);
+    $('#templatesBtn').addEventListener('click', openTemplateLibrary);
+    $('#reactionsBtn').addEventListener('click', openReactionLibrary);
+    $('#diagramsBtn').addEventListener('click', openDiagramLibrary);
+    $('#layersBtn').addEventListener('click', openLayers);
+    $('#zoomInBtn').addEventListener('click',()=>zoomAt(camera.zoom*1.2));
+    $('#zoomOutBtn').addEventListener('click',()=>zoomAt(camera.zoom/1.2));
+    $('#fitBoardBtn').addEventListener('click',fitBoard);
+
+    function initCanvas() {
+      canvas=$('#boardCanvas'); ctx=canvas.getContext('2d'); stage=$('#boardStage');
+      const resize = () => {
+        const rect=stage.getBoundingClientRect(), dpr=window.devicePixelRatio || 1;
+        canvas.width=Math.max(1,Math.round(rect.width*dpr)); canvas.height=Math.max(1,Math.round(rect.height*dpr));
+        ctx.setTransform(dpr,0,0,dpr,0,0); render(); updateZoomUI();
+      };
+      new ResizeObserver(resize).observe(stage); resize();
+      canvas.addEventListener('pointerdown', onPointerDown);
+      canvas.addEventListener('pointermove', onPointerMove);
+      canvas.addEventListener('pointerup', onPointerUp);
+      canvas.addEventListener('pointercancel', onPointerUp);
+      canvas.addEventListener('pointerleave',()=>sendCursor(null));
+      canvas.addEventListener('contextmenu',e=>e.preventDefault());
+      canvas.addEventListener('wheel',e=>{
+        e.preventDefault();
+        const r=canvas.getBoundingClientRect();
+        const sx=e.clientX-r.left, sy=e.clientY-r.top;
+        zoomAt(camera.zoom*Math.exp(-e.deltaY*.0015),sx,sy);
+      },{passive:false});
+      canvas.addEventListener('dblclick',e=>{const item=hitTest(pointFromEvent(e));if(item&&(item.type==='frame'||item.type==='diagram'||item.type==='text'||item.type==='sticky'))editObject(item);});
+      updateZoomUI();
+    }
+    function screenPointFromEvent(e) { const r=canvas.getBoundingClientRect(); return {x:e.clientX-r.left,y:e.clientY-r.top}; }
+    function pointFromEvent(e) { const p=screenPointFromEvent(e); return {x:(p.x-camera.x)/camera.zoom,y:(p.y-camera.y)/camera.zoom}; }
+    function viewportCenterWorld() {return {x:(canvas.clientWidth/2-camera.x)/camera.zoom,y:(canvas.clientHeight/2-camera.y)/camera.zoom};}
+    function saveView() {try{localStorage.setItem(`canvasly_view_${roomId}`,JSON.stringify(camera));}catch{}}
+    function updateZoomUI() {const label=$('#zoomLabel');if(label)label.textContent=`${Math.round(camera.zoom*100)}%`;}
+    function zoomAt(nextZoom,screenX=canvas.clientWidth/2,screenY=canvas.clientHeight/2) {
+      if(!canvas)return;
+      const zoom=Math.max(.08,Math.min(5,nextZoom));
+      const worldX=(screenX-camera.x)/camera.zoom, worldY=(screenY-camera.y)/camera.zoom;
+      camera.zoom=zoom;camera.x=screenX-worldX*zoom;camera.y=screenY-worldY*zoom;
+      saveView();updateZoomUI();render();renderCursors();
+    }
+    function fitBoard() {
+      if(!canvas)return;
+      const visible=orderedItems().filter(item=>!item.hidden);
+      if(!visible.length){camera={x:0,y:0,zoom:1};saveView();updateZoomUI();render();return;}
+      const boxes=visible.map(bounds);const minX=Math.min(...boxes.map(b=>b.x)),minY=Math.min(...boxes.map(b=>b.y));
+      const maxX=Math.max(...boxes.map(b=>b.x+b.w)),maxY=Math.max(...boxes.map(b=>b.y+b.h));
+      const bw=Math.max(1,maxX-minX),bh=Math.max(1,maxY-minY),pad=100;
+      camera.zoom=Math.max(.08,Math.min(3.5,(canvas.clientWidth-pad)/ (bw+pad),(canvas.clientHeight-pad)/(bh+pad)));
+      camera.x=canvas.clientWidth/2-((minX+maxX)/2)*camera.zoom;
+      camera.y=canvas.clientHeight/2-((minY+maxY)/2)*camera.zoom;
+      saveView();updateZoomUI();render();renderCursors();
+    }
+    function makeBase(type, extra={}) { const zIndex=nextLayer;nextLayer+=10;return {id:randomId(),type,color:selectedColor,width:strokeWidth,zIndex,locked:false,hidden:false,authorId:userId,authorName:userName,updatedAt:Date.now(),...extra}; }
+    function onPointerDown(e) {
+      if (e.button===2) {
+        e.preventDefault();canvas.setPointerCapture(e.pointerId);panState={pointerId:e.pointerId,lastX:e.clientX,lastY:e.clientY};stage.classList.add('panning');canvas.style.cursor='grabbing';return;
+      }
+      if (e.button!==0) return;
+      canvas.setPointerCapture(e.pointerId); drawingPointer=e.pointerId;
+      const p=pointFromEvent(e); lastBoardPoint=p;
+      if (activeTool==='text') { pendingTextPoint=p; openTextComposer('text'); return; }
+      if (activeTool==='sticky') { pendingTextPoint=p; openTextComposer('sticky'); return; }
+      if (activeTool==='select') {
+        const found=hitTest(p);
+        selectedId=found?.id || null;
+        moveState=found&&!found.locked ? {id:found.id,start:p,before:deepCopy(found),moved:false} : null;
+        render(); return;
+      }
+      if (['pen','highlighter','eraser'].includes(activeTool)) {
+        draft=makeBase('stroke',{tool:activeTool,points:[p],composite:activeTool==='eraser'?'destination-out':'source-over',opacity:activeTool==='highlighter'?.28:1,width:activeTool==='highlighter'?Math.max(14,strokeWidth*2.4):strokeWidth});
+      } else {
+        draft=makeBase(activeTool,{x1:p.x,y1:p.y,x2:p.x,y2:p.y});
+      }
+      render();
+    }
+    function onPointerMove(e) {
+      if(panState&&e.pointerId===panState.pointerId) {
+        camera.x+=e.clientX-panState.lastX;camera.y+=e.clientY-panState.lastY;
+        panState.lastX=e.clientX;panState.lastY=e.clientY;render();renderCursors();return;
+      }
+      const p=pointFromEvent(e); lastBoardPoint=p; $('#coordLabel').textContent=`x: ${Math.round(p.x)}, y: ${Math.round(p.y)}`; sendCursor(p);
+      if (!draft && !moveState) return;
+      if (draft) {
+        if(draft.type==='stroke') {
+          const points=draft.points, last=points[points.length-1];
+          if(Math.hypot(p.x-last.x,p.y-last.y)>0.8) points.push(p);
+        } else { draft.x2=p.x; draft.y2=p.y; if(['rect','ellipse'].includes(draft.type)){draft.x=Math.min(draft.x1,draft.x2);draft.y=Math.min(draft.y1,draft.y2);draft.w=Math.abs(draft.x2-draft.x1);draft.h=Math.abs(draft.y2-draft.y1);} }
+        if(Date.now()-lastDraftSent>55){lastDraftSent=Date.now();sendBroadcast('item-preview',{item:draft});}
+        render();
+      } else if(moveState) {
+        const dx=p.x-moveState.start.x, dy=p.y-moveState.start.y;
+        moveState.moved=Math.hypot(dx,dy)>2;
+        items.set(moveState.id,moveElement(moveState.before,dx,dy));
+        if(Date.now()-lastDraftSent>55){lastDraftSent=Date.now();const preview={...items.get(moveState.id),authorId:userId,authorName:userName,updatedAt:Date.now()};sendBroadcast('item-preview',{item:preview});}
+        render();
+      }
+    }
+    function onPointerUp(e) {
+      if(panState) {
+        if(e.pointerId!==panState.pointerId)return;
+        panState=null;stage.classList.remove('panning');
+        const cursor=activeTool==='select'?'default':activeTool==='eraser'?'cell':'crosshair';canvas.style.cursor=cursor;saveView();return;
+      }
+      if(drawingPointer!==null && e.pointerId!==drawingPointer) return;
+      drawingPointer=null;
+      if (draft) {
+        let item=deepCopy(draft); draft=null;
+        if(item.type==='stroke' && item.points.length===1) item.points.push({...item.points[0]});
+        if(['rect','ellipse'].includes(item.type)) { item.x=Math.min(item.x1,item.x2);item.y=Math.min(item.y1,item.y2);item.w=Math.abs(item.x2-item.x1);item.h=Math.abs(item.y2-item.y1);delete item.x1;delete item.y1;delete item.x2;delete item.y2; }
+        if(['line','arrow'].includes(item.type) && Math.hypot(item.x2-item.x1,item.y2-item.y1)<2) { sendBroadcast('item-preview-end',{id:item.id}); render(); return; }
+        if(item.type==='rect' && item.w<2 || item.type==='ellipse' && item.h<2) { sendBroadcast('item-preview-end',{id:item.id}); render(); return; }
+        commitAdd(item); sendBroadcast('item-preview-end',{id:item.id});
+      } else if(moveState) {
+        const state=moveState; moveState=null;
+        if(state.moved) {
+          const after=deepCopy(items.get(state.id)); after.updatedAt=Date.now(); after.authorId=userId; after.authorName=userName;
+          items.set(state.id,after); commitUpdate(state.before,after); sendBroadcast('item-preview-end',{id:state.id});
+        } else { items.set(state.id,state.before); }
+        render();
+      }
+    }
+    function moveElement(item,dx,dy) {
+      const out=deepCopy(item);
+      if(out.type==='stroke') out.points=out.points.map(p=>({x:p.x+dx,y:p.y+dy}));
+      else if(['line','arrow'].includes(out.type)){out.x1+=dx;out.y1+=dy;out.x2+=dx;out.y2+=dy;}
+      else {out.x=(out.x||0)+dx;out.y=(out.y||0)+dy;}
+      return out;
+    }
+    function orderedItems() {
+      return [...items.values()].sort((a,b)=>{
+        const az=Number.isFinite(a.zIndex)?a.zIndex:0, bz=Number.isFinite(b.zIndex)?b.zIndex:0;
+        return az-bz;
+      });
+    }
+    function ensureLayerNumbers() {
+      let next=10;
+      for(const item of items.values()) {
+        if(!Number.isFinite(item.zIndex)){item.zIndex=next;next+=10;}
+        else next=Math.max(next,item.zIndex+10);
+      }
+      nextLayer=Math.max(nextLayer,next);
+    }
+    function drawWorldGrid(w,h,dpr) {
+      if(!isGridOn)return;
+      const zoom=camera.zoom;
+      let step=zoom<.25?88:zoom<.5?44:22;
+      const left=-camera.x/zoom, right=(w-camera.x)/zoom, top=-camera.y/zoom, bottom=(h-camera.y)/zoom;
+      ctx.setTransform(dpr*zoom,0,0,dpr*zoom,dpr*camera.x,dpr*camera.y);
+      ctx.fillStyle='rgba(27,217,106,.20)';
+      const radius=.65/zoom;
+      for(let x=Math.floor(left/step)*step;x<=right;x+=step)for(let y=Math.floor(top/step)*step;y<=bottom;y+=step){ctx.beginPath();ctx.arc(x,y,radius,0,Math.PI*2);ctx.fill();}
+    }
+    function render() {
+      if(!ctx || !canvas) return;
+      const dpr=window.devicePixelRatio || 1, w=canvas.width/dpr, h=canvas.height/dpr;
+      ctx.setTransform(dpr,0,0,dpr,0,0); ctx.clearRect(0,0,w,h);
+      drawWorldGrid(w,h,dpr);
+      ctx.setTransform(dpr*camera.zoom,0,0,dpr*camera.zoom,dpr*camera.x,dpr*camera.y);
+      for(const item of orderedItems()) if(!item.hidden&&!remoteDrafts.has(item.id)) drawElement(ctx,item);
+      for(const preview of remoteDrafts.values()) if(!preview.hidden) drawElement(ctx,preview);
+      if(draft) drawElement(ctx,draft);
+      if(selectedId && items.has(selectedId) && activeTool==='select'&&!items.get(selectedId).hidden) drawSelection(ctx,items.get(selectedId));
+      updateCountsAndStatus();updateZoomUI();
+    }
+    function drawElement(c,item) {
+      c.save(); c.lineCap='round';c.lineJoin='round';c.strokeStyle=item.color||'#1bd96a';c.fillStyle=item.color||'#1bd96a';c.lineWidth=item.width||2;
+      if(item.type==='stroke') {
+        c.globalCompositeOperation=item.composite || 'source-over';c.globalAlpha=item.opacity??1;
+        const pts=item.points||[]; if(!pts.length){c.restore();return;}
+        c.beginPath();c.moveTo(pts[0].x,pts[0].y);
+        if(pts.length===1)c.lineTo(pts[0].x+.01,pts[0].y+.01);else for(let i=1;i<pts.length;i++)c.lineTo(pts[i].x,pts[i].y);
+        c.stroke();
+      } else if(item.type==='rect') {
+        c.strokeRect(item.x,item.y,item.w,item.h);
+      } else if(item.type==='ellipse') {
+        c.beginPath();c.ellipse(item.x+item.w/2,item.y+item.h/2,Math.max(.5,item.w/2),Math.max(.5,item.h/2),0,0,Math.PI*2);c.stroke();
+      } else if(item.type==='line' || item.type==='arrow') {
+        c.beginPath();c.moveTo(item.x1,item.y1);c.lineTo(item.x2,item.y2);c.stroke();
+        if(item.type==='arrow') {
+          const a=Math.atan2(item.y2-item.y1,item.x2-item.x1), len=Math.max(9,(item.width||2)*4.5);
+          c.beginPath();c.moveTo(item.x2,item.y2);c.lineTo(item.x2-len*Math.cos(a-Math.PI/6),item.y2-len*Math.sin(a-Math.PI/6));c.moveTo(item.x2,item.y2);c.lineTo(item.x2-len*Math.cos(a+Math.PI/6),item.y2-len*Math.sin(a+Math.PI/6));c.stroke();
+        }
+      } else if(item.type==='text') {
+        c.font=`${item.fontSize||22}px Inter, ui-sans-serif, system-ui, sans-serif`; c.textBaseline='top';
+        const lines=String(item.text||'').split('\n');lines.forEach((line,i)=>c.fillText(line,item.x,item.y+i*((item.fontSize||22)*1.35)));
+      } else if(item.type==='sticky') {
+        const w=item.w||190,h=item.h||145;c.shadowColor='#1e293b10';c.shadowBlur=7;c.shadowOffsetY=2;c.fillStyle=item.fill||'#fff2a8';c.strokeStyle='#ebd879';c.lineWidth=1;c.fillRect(item.x,item.y,w,h);c.strokeRect(item.x,item.y,w,h);c.shadowColor='transparent';
+        c.fillStyle='#4c4632';c.font='14px Inter, ui-sans-serif, system-ui, sans-serif';c.textBaseline='top';wrapText(c,String(item.text||''),item.x+13,item.y+13,w-26,20);
+      } else if(item.type==='image') {
+        const img=getBoardImage(item);
+        if(img.complete&&img.naturalWidth) c.drawImage(img,item.x,item.y,item.w||img.naturalWidth,item.h||img.naturalHeight);
+        else { c.fillStyle='#f4f5fa'; c.strokeStyle='#cdd2df'; c.lineWidth=1; c.fillRect(item.x,item.y,item.w||180,item.h||120); c.strokeRect(item.x,item.y,item.w||180,item.h||120); }
+      } else if(item.type==='frame') {
+        const w=item.w||900,h=item.h||600;
+        c.save();c.lineWidth=2;c.strokeStyle=item.color||'#1bd96a';c.fillStyle='#061109';c.globalAlpha=.96;c.fillRect(item.x,item.y,w,h);c.globalAlpha=1;c.setLineDash([10,7]);c.strokeRect(item.x,item.y,w,h);c.setLineDash([]);
+        c.fillStyle='#12351f';c.fillRect(item.x,item.y,w,36);c.fillStyle='#7cffb2';c.font='bold 16px Inter, ui-sans-serif, system-ui, sans-serif';c.textBaseline='middle';c.fillText(item.name||'Frame',item.x+13,item.y+18);c.restore();
+      } else if(item.type==='diagram') {
+        drawDiagram(c,item);
+      }
+      c.restore();
+    }
+    function drawDiagram(c,item) {
+      const x=item.x,y=item.y,w=item.w||210,h=item.h||130,label=String(item.label||'Untitled');
+      const color=item.color||'#1bd96a';c.save();c.lineWidth=2;c.strokeStyle=color;c.fillStyle='#fbfaff';c.font='13px Inter, ui-sans-serif, system-ui, sans-serif';c.textBaseline='middle';
+      const center=(text,cx,cy,max=w-20)=>{c.textAlign='center';c.fillStyle='#30364a';const words=String(text).split(' ');let line='',lines=[];for(const word of words){const test=line?line+' '+word:word;if(c.measureText(test).width>max&&line){lines.push(line);line=word;}else line=test;}if(line)lines.push(line);const lh=17;lines.slice(0,4).forEach((ln,i)=>c.fillText(ln,cx,cy+(i-(Math.min(lines.length,4)-1)/2)*lh));c.textAlign='left';};
+      if(item.diagramType==='uml-class') {
+        c.fillStyle='#f7f6ff';c.fillRect(x,y,w,h);c.strokeRect(x,y,w,h);c.fillStyle='#eae8ff';c.fillRect(x,y,w,34);c.strokeRect(x,y,w,34);c.beginPath();c.moveTo(x,y+68);c.lineTo(x+w,y+68);c.stroke();
+        c.fillStyle='#30364a';c.font='bold 13px Inter, sans-serif';center(label,x+w/2,y+17,w-16);c.font='12px ui-monospace, monospace';c.textAlign='left';c.fillText('+ attribute: Type',x+12,y+49);c.fillText('+ method(): Type',x+12,y+89);
+      } else if(item.diagramType==='use-case') {
+        c.beginPath();c.ellipse(x+w/2,y+h/2,w/2,h/2,0,0,Math.PI*2);c.fillStyle='#f8f6ff';c.fill();c.stroke();center(label,x+w/2,y+h/2,w-30);
+      } else if(item.diagramType==='database') {
+        c.fillStyle='#f2f8ff';c.beginPath();c.moveTo(x,y+18);c.lineTo(x,y+h-18);c.ellipse(x+w/2,y+h-18,w/2,18,0,0,Math.PI);c.lineTo(x+w,y+18);c.ellipse(x+w/2,y+18,w/2,18,0,0,Math.PI*2);c.fill();c.stroke();c.beginPath();c.ellipse(x+w/2,y+18,w/2,18,0,0,Math.PI*2);c.stroke();c.beginPath();c.ellipse(x+w/2,y+h*.53,w/2,15,0,0,Math.PI);c.stroke();center(label,x+w/2,y+h*.49,w-18);
+      } else if(item.diagramType.startsWith('aws-')||item.diagramType.startsWith('azure-')) {
+        const azure=item.diagramType.startsWith('azure-'),brand=azure?'#0078d4':'#ff9900';
+        const glyphs={'aws-lambda':'λ','aws-ec2':'EC2','aws-s3':'S3','aws-rds':'DB','azure-functions':'ƒx','azure-vm':'VM','azure-blob':'B','azure-sql':'DB'};
+        c.fillStyle=azure?'#f2f8ff':'#fff8ed';c.strokeStyle=brand;c.beginPath();c.roundRect(x,y,w,h,12);c.fill();c.stroke();
+        c.fillStyle=brand;c.beginPath();c.arc(x+28,y+h/2,18,0,Math.PI*2);c.fill();c.fillStyle='#fff';c.font='bold 11px Inter,sans-serif';c.textAlign='center';c.fillText(glyphs[item.diagramType]|| (azure?'AZ':'AWS'),x+28,y+h/2+1);c.textAlign='left';
+        c.fillStyle='#30364a';c.font='bold 12px Inter,sans-serif';c.fillText(label,x+56,y+h/2-3);c.fillStyle='#7b8497';c.font='10px Inter,sans-serif';c.fillText(azure?'AZURE CLOUD':'AWS CLOUD',x+56,y+h/2+14);
+      } else if(item.diagramType==='cloud'||item.diagramType==='aws-service'||item.diagramType==='azure-service') {
+        c.beginPath();c.moveTo(x+w*.2,y+h*.72);c.bezierCurveTo(x+w*.04,y+h*.72,x+w*.02,y+h*.49,x+w*.18,y+h*.43);c.bezierCurveTo(x+w*.2,y+h*.13,x+w*.46,y+h*.06,x+w*.58,y+h*.31);c.bezierCurveTo(x+w*.78,y+h*.19,x+w*.95,y+h*.37,x+w*.91,y+h*.55);c.bezierCurveTo(x+w*1.04,y+h*.73,x+w*.87,y+h*.83,x+w*.72,y+h*.82);c.lineTo(x+w*.2,y+h*.82);c.closePath();c.fillStyle=item.diagramType==='azure-service'?'#f0f7ff':'#f8f6ff';c.fill();c.stroke();
+        if(item.diagramType!=='cloud'){c.fillStyle=color;c.fillRect(x+w*.35,y+h*.35,w*.3,20);c.fillStyle='#fff';c.font='bold 10px Inter,sans-serif';c.textAlign='center';c.fillText(item.diagramType==='azure-service'?'AZURE':'AWS',x+w*.5,y+h*.45);c.textAlign='left';center(label,x+w*.5,y+h*.68,w*.64);}else center(label,x+w*.5,y+h*.58,w*.6);
+      } else if(item.diagramType==='server') {
+        c.fillStyle='#f7faff';c.fillRect(x,y,w,h);c.strokeRect(x,y,w,h);for(let i=0;i<3;i++){const yy=y+15+i* (h-30)/3;c.strokeRect(x+12,yy,w-24,20);c.fillStyle='#33a778';c.beginPath();c.arc(x+22,yy+10,3,0,Math.PI*2);c.fill();c.fillStyle='#d8dce7';c.fillRect(x+34,yy+7,w-57,6);}center(label,x+w/2,y+h-10,w-20);
+      } else if(item.diagramType==='wireframe') {
+        c.fillStyle='#fff';c.fillRect(x,y,w,h);c.strokeRect(x,y,w,h);c.fillStyle='#f0efff';c.fillRect(x,y,w,25);c.strokeRect(x,y,w,25);for(let i=0;i<3;i++){c.beginPath();c.arc(x+11+i*11,y+12,3,0,Math.PI*2);c.fillStyle=color;c.fill();}c.fillStyle='#f6f7fb';c.fillRect(x+10,y+37,w*.25,h-48);c.strokeRect(x+10,y+37,w*.25,h-48);c.strokeRect(x+w*.32,y+37,w*.59,h*.28);c.strokeRect(x+w*.32,y+h*.55,w*.27,h*.28);c.strokeRect(x+w*.63,y+h*.55,w*.28,h*.28);c.fillStyle='#30364a';c.font='12px Inter,sans-serif';c.fillText(label,x+12,y+h-7);
+      } else if(item.diagramType==='mindmap') {
+        c.fillStyle='#f0efff';c.beginPath();c.roundRect(x,y,w,h,16);c.fill();c.stroke();center(label,x+w/2,y+h/2,w-24);
+      } else if(item.diagramType==='kanban') {
+        c.fillStyle='#fff';c.fillRect(x,y,w,h);c.strokeRect(x,y,w,h);center(label,x+w/2,y+16,w-20);const titles=['TO DO','IN PROGRESS','DONE'];const colW=(w-24)/3;for(let i=0;i<3;i++){const xx=x+8+i*(colW+4);c.fillStyle=['#f1f2f8','#f0efff','#eaf8f0'][i];c.fillRect(xx,y+32,colW,h-40);c.strokeRect(xx,y+32,colW,h-40);c.fillStyle='#42495c';c.font='bold 10px Inter,sans-serif';c.textAlign='center';c.fillText(titles[i],xx+colW/2,y+47);c.fillStyle='#fff';c.fillRect(xx+6,y+59,colW-12,25);c.strokeRect(xx+6,y+59,colW-12,25);}c.textAlign='left';
+      }
+      c.restore();
+    }
+    function getBoardImage(item) {
+      const cached=imageCache.get(item.id);
+      if(cached&&cached.src===item.src)return cached.img;
+      const img=new Image(); imageCache.set(item.id,{src:item.src,img});
+      img.onload=()=>render(); img.onerror=()=>console.warn('Could not render pasted image',item.id); img.src=item.src||'';
+      return img;
+    }
+    async function convertClipboardImage(file) {
+      const rawUrl=await new Promise((resolve,reject)=>{const reader=new FileReader();reader.onload=()=>resolve(reader.result);reader.onerror=reject;reader.readAsDataURL(file);});
+      const image=await new Promise((resolve,reject)=>{const img=new Image();img.onload=()=>resolve(img);img.onerror=reject;img.src=rawUrl;});
+      const maxDim=1200,scale=Math.min(1,maxDim/Math.max(image.naturalWidth,image.naturalHeight));
+      const w=Math.max(1,Math.round(image.naturalWidth*scale)),h=Math.max(1,Math.round(image.naturalHeight*scale));
+      const off=document.createElement('canvas');off.width=w;off.height=h;const c=off.getContext('2d');
+      c.fillStyle='#ffffff';c.fillRect(0,0,w,h);c.drawImage(image,0,0,w,h);
+      return {src:off.toDataURL('image/jpeg',.78),w,h};
+    }
+    function pasteTextToBoard(text) {
+      const center=viewportCenterWorld();const p=lastBoardPoint||{x:center.x-160,y:center.y-50};
+      const item=makeBase('text',{x:p.x,y:p.y,text:String(text).replace(/\r/g,''),fontSize:20});
+      commitAdd(item);selectedId=item.id;setTool('select');render();toast('Text pasted onto the whiteboard.');
+    }
+    async function pasteImageToBoard(file) {
+      try {
+        const image=await convertClipboardImage(file);
+        const center=viewportCenterWorld();const scale=Math.min(1,(canvas.clientWidth*.72/camera.zoom)/image.w,(canvas.clientHeight*.72/camera.zoom)/image.h);
+        const p=lastBoardPoint||{x:center.x-image.w*scale/2,y:center.y-image.h*scale/2};
+        const item=makeBase('image',{x:p.x,y:p.y,w:Math.round(image.w*scale),h:Math.round(image.h*scale),src:image.src,sourceWidth:image.w,sourceHeight:image.h});
+        commitAdd(item);selectedId=item.id;setTool('select');render();toast('Image pasted onto the whiteboard.');
+      } catch(err) {console.error('Clipboard image paste failed:',err);toast('Could not paste that image. Try copying it again.');}
+    }
+    function readObjectClipboard() { return clipboardObject ? deepCopy(clipboardObject) : null; }
+    function copySelectedObject() {
+      const item=items.get(selectedId);if(!item)return;
+      clipboardObject=deepCopy(item);
+      if(navigator.clipboard?.writeText)navigator.clipboard.writeText('CANVASLY_OBJECT_CLIPBOARD').catch(()=>{});
+      toast('Object copied. Paste inside joard. to duplicate it.');
+    }
+    function pasteCopiedObject() {
+      const source=readObjectClipboard();if(!source)return false;
+      const copy=moveElement(source,40/camera.zoom,40/camera.zoom);copy.id=randomId();copy.zIndex=nextLayer;nextLayer+=10;copy.locked=false;copy.hidden=false;copy.updatedAt=Date.now();copy.authorId=userId;copy.authorName=userName;
+      commitAdd(copy);selectedId=copy.id;setTool('select');render();toast('Object duplicated.');return true;
+    }
+    document.addEventListener('paste',async e=>{
+      const focused=document.activeElement;
+      if(focused&&(['INPUT','TEXTAREA'].includes(focused.tagName)||focused.isContentEditable))return;
+      const clip=e.clipboardData;if(!clip)return;
+      const imageItem=[...clip.items].find(item=>item.kind==='file'&&item.type.startsWith('image/'));
+      if(imageItem) {const file=imageItem.getAsFile();if(file){e.preventDefault();await pasteImageToBoard(file);return;}}
+      const text=clip.getData('text/plain');
+      if(text==='CANVASLY_OBJECT_CLIPBOARD') {e.preventDefault();if(!pasteCopiedObject())toast('That copied object is no longer available. Copy it again.');return;}
+      if(text) {e.preventDefault();pasteTextToBoard(text);return;}
+      if(pasteCopiedObject())e.preventDefault();
+    });
+    function wrapText(c,text,x,y,maxWidth,lineHeight) {
+      const paragraphs=text.split('\n');let yy=y;
+      paragraphs.forEach(paragraph=>{
+        const words=paragraph.split(/\s+/);let line='';
+        for(const word of words){const test=line?`${line} ${word}`:word;if(c.measureText(test).width>maxWidth&&line){c.fillText(line,x,yy);yy+=lineHeight;line=word;}else line=test;}
+        c.fillText(line,x,yy);yy+=lineHeight;
+      });
+    }
+    function bounds(item) {
+      if(item.type==='stroke') {const ps=item.points||[];if(!ps.length)return{x:0,y:0,w:0,h:0};const xs=ps.map(p=>p.x),ys=ps.map(p=>p.y),pad=(item.width||2)/2+3;const x=Math.min(...xs)-pad,y=Math.min(...ys)-pad;return{x,y,w:Math.max(...xs)-Math.min(...xs)+pad*2,h:Math.max(...ys)-Math.min(...ys)+pad*2};}
+      if(item.type==='line'||item.type==='arrow'){const pad=(item.width||2)+7;return{x:Math.min(item.x1,item.x2)-pad,y:Math.min(item.y1,item.y2)-pad,w:Math.abs(item.x2-item.x1)+pad*2,h:Math.abs(item.y2-item.y1)+pad*2};}
+      if(item.type==='sticky'||item.type==='image')return{x:item.x,y:item.y,w:item.w||(item.type==='sticky'?190:180),h:item.h||(item.type==='sticky'?145:120)};
+      if(item.type==='text'){const size=item.fontSize||22;const lines=String(item.text||'').split('\n');return{x:item.x-3,y:item.y-3,w:Math.max(35,...lines.map(line=>line.length*size*.65))+6,h:lines.length*size*1.35+6};}
+      return{x:item.x,y:item.y,w:item.w,h:item.h};
+    }
+    function drawSelection(c,item) {const b=bounds(item);c.save();c.strokeStyle='#1bd96a';c.lineWidth=1;c.setLineDash([4,3]);c.strokeRect(b.x,b.y,b.w,b.h);c.setLineDash([]);c.fillStyle='#07110b';c.strokeStyle='#7cffb2';[[b.x,b.y],[b.x+b.w,b.y],[b.x,b.y+b.h],[b.x+b.w,b.y+b.h]].forEach(([x,y])=>{c.beginPath();c.rect(x-3,y-3,6,6);c.fill();c.stroke();});c.restore();}
+    function distanceToSegment(p,a,b) {const dx=b.x-a.x,dy=b.y-a.y;const len=dx*dx+dy*dy;if(!len)return Math.hypot(p.x-a.x,p.y-a.y);const t=Math.max(0,Math.min(1,((p.x-a.x)*dx+(p.y-a.y)*dy)/len));return Math.hypot(p.x-(a.x+t*dx),p.y-(a.y+t*dy));}
+    function hitTest(p) {
+      const arr=orderedItems().reverse();
+      for(const item of arr){
+        if(item.hidden)continue;
+        if(item.type==='frame') {
+          const b=bounds(item), inside=p.x>=b.x&&p.x<=b.x+b.w&&p.y>=b.y&&p.y<=b.y+b.h;
+          const edge=inside&&(p.y<=b.y+36||Math.abs(p.x-b.x)<8||Math.abs(p.x-(b.x+b.w))<8||Math.abs(p.y-(b.y+b.h))<8);
+          if(edge)return item;continue;
+        }
+        if(item.type==='stroke') {const pts=item.points||[],tolerance=Math.max(8,(item.width||2)+5);if(pts.length===1&&Math.hypot(p.x-pts[0].x,p.y-pts[0].y)<tolerance)return item;for(let i=1;i<pts.length;i++)if(distanceToSegment(p,pts[i-1],pts[i])<tolerance)return item;}
+        else if(item.type==='line'||item.type==='arrow'){if(distanceToSegment(p,{x:item.x1,y:item.y1},{x:item.x2,y:item.y2})<10)return item;}
+        else {const b=bounds(item);if(p.x>=b.x-4&&p.x<=b.x+b.w+4&&p.y>=b.y-4&&p.y<=b.y+b.h+4)return item;}
+      }
+      return null;
+    }
+
+    function pushHistory(action) {undoStack.push(deepCopy(action));if(undoStack.length>150)undoStack.shift();redoStack=[];updateCounts();}
+    function commitAdd(item, record=true) {item.updatedAt=item.updatedAt||Date.now();items.set(item.id,item);selectedId=null;render();if(record)pushHistory({kind:'add',items:[item]});emitUpsert(item);localSave();}
+    function commitUpdate(before,after,record=true) {items.set(after.id,after);render();if(record)pushHistory({kind:'update',before:[before],after:[after]});emitUpsert(after);localSave();}
+    function commitDelete(ids,record=true) {
+      const removed=ids.map(id=>items.get(id)).filter(Boolean).map(deepCopy);if(!removed.length)return;
+      ids.forEach(id=>items.delete(id));if(ids.includes(selectedId))selectedId=null;render();
+      if(record)pushHistory({kind:'delete',items:removed});emitDelete(ids);localSave();
+    }
+    function applyRemoteUpsert(item) {
+      if(!item||!item.id)return;
+      if(!Number.isFinite(item.zIndex)){item={...item,zIndex:nextLayer};nextLayer+=10;}else nextLayer=Math.max(nextLayer,item.zIndex+10);
+      remoteDrafts.delete(item.id);const existing=items.get(item.id);
+      if(!existing || (item.updatedAt||0)>=(existing.updatedAt||0)) {items.set(item.id,item);render();localSave();}
+    }
+    function applyRemoteDelete(ids) {ids.forEach(id=>{items.delete(id);remoteDrafts.delete(id);});if(ids.includes(selectedId))selectedId=null;render();localSave();}
+    function applyUpserts(itemsToAdd,record=false) {itemsToAdd.forEach(item=>{const fresh={...deepCopy(item),updatedAt:Date.now(),authorId:userId,authorName:userName};items.set(fresh.id,fresh);emitUpsert(fresh);});render();localSave();if(record)pushHistory({kind:'add',items:itemsToAdd});}
+    function undo() {
+      const action=undoStack.pop();if(!action)return;
+      if(action.kind==='add') {action.items.forEach(i=>items.delete(i.id));emitDelete(action.items.map(i=>i.id));}
+      else if(action.kind==='delete') {applyUpserts(action.items,false);}
+      else if(action.kind==='update') {action.before.forEach(item=>{const v={...deepCopy(item),updatedAt:Date.now(),authorId:userId,authorName:userName};items.set(v.id,v);emitUpsert(v);});}
+      redoStack.push(action);render();localSave();updateCounts();
+    }
+    function redo() {
+      const action=redoStack.pop();if(!action)return;
+      if(action.kind==='add') applyUpserts(action.items,false);
+      else if(action.kind==='delete') {action.items.forEach(i=>items.delete(i.id));emitDelete(action.items.map(i=>i.id));}
+      else if(action.kind==='update') {action.after.forEach(item=>{const v={...deepCopy(item),updatedAt:Date.now(),authorId:userId,authorName:userName};items.set(v.id,v);emitUpsert(v);});}
+      undoStack.push(action);render();localSave();updateCounts();
+    }
+    function confirmClear() {
+      if(items.size===0){toast('The whiteboard is already empty.');return;}
+      showModal({title:'Clear this whiteboard?',description:'This removes all objects from the current room for everyone connected.',icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M10 11v6m4-6v6M6 7l1 14h10l1-14M9 7V4h6v3"/></svg>',body:'<p style="font-size:12px;color:#717a8e;line-height:1.6;margin:0">The action can be undone on this device, but collaborators may continue drawing while the board is cleared.</p>',actions:[{label:'Cancel',onClick:closeModal},{label:'Clear board',primary:true,onClick:()=>{const ids=[...items.keys()];commitDelete(ids);closeModal();toast('Whiteboard cleared.');}}]});
+    }
+    function openTextComposer(kind) {
+      const isSticky=kind==='sticky';
+      showModal({title:isSticky?'Add a sticky note':'Add text',description:isSticky?'Write a note for the board.':'Add a text label to the board.',icon:isSticky?'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linejoin="round"><path d="M5 3h14v13l-5 5H5V3Z"/><path d="M14 21v-5h5"/></svg>':'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6V4h16v2M12 4v16m-4 0h8"/></svg>',body:`<div class="field"><label for="composeText">${isSticky?'Note content':'Text content'}</label><textarea id="composeText" maxlength="1200" placeholder="${isSticky?'Capture an idea…':'Type something…'}" autofocus></textarea><span class="field-help">${isSticky?'Sticky notes are 190 × 145 px.':'Line breaks are preserved.'}</span></div>`,actions:[{label:'Cancel',onClick:closeModal},{label:isSticky?'Add note':'Add text',primary:true,onClick:()=>{const text=$('#composeText').value.trim();if(!text){toast('Enter some text first.');return;}const p=pendingTextPoint||{x:80,y:80};const item=isSticky?makeBase('sticky',{x:p.x,y:p.y,w:190,h:145,text,fill:'#fff2a8',color:'#4c4632',width:1}):makeBase('text',{x:p.x,y:p.y,text,fontSize:22});commitAdd(item);closeModal();setTool('select');}}]});
+      setTimeout(()=>$('#composeText')?.focus(),50);
+    }
+
+    function sendBroadcast(event,payload) {if(channel&&isOnline)channel.send({type:'broadcast',event,payload}).catch(()=>{});}
+    async function emitUpsert(item) {
+      sendBroadcast('item-upsert',{item});
+      if(!supabase||!isOnline)return;
+      const {error}=await supabase.from('whiteboard_items').upsert({id:item.id,board_id:roomId,data:item,updated_at:new Date(item.updatedAt||Date.now()).toISOString()});
+      if(error) { console.error('Could not save item:',error.message);$('#syncStatus').textContent='Sync save failed'; }
+    }
+    async function emitDelete(ids) {
+      if(!ids.length)return;sendBroadcast('items-delete',{ids});
+      if(!supabase||!isOnline)return;
+      const {error}=await supabase.from('whiteboard_items').delete().eq('board_id',roomId).in('id',ids);
+      if(error) {console.error('Could not delete items:',error.message);$('#syncStatus').textContent='Sync delete failed';}
+    }
+    async function loadRemoteItems() {
+      if(!supabase||!isOnline)return;
+      const {data,error}=await supabase.from('whiteboard_items').select('id,data,updated_at').eq('board_id',roomId).order('created_at',{ascending:true});
+      if(error) {console.error('Could not load board:',error.message);toast(`Could not load shared board: ${error.message}`);return;}
+      const remoteIds=new Set((data||[]).map(row=>row.id));
+      (data||[]).forEach(row=>{if(row.data)applyRemoteUpsert(row.data);});
+      // Upload locally saved objects missing from the remote room so connecting does not discard offline work.
+      ensureLayerNumbers();render();
+      const local=[...items.values()].filter(item=>!remoteIds.has(item.id));
+      for(const item of local) await emitUpsert(item);
+      localSave();
+    }
+    async function startSync(url,key) {
+      connectionAttempt++;const thisAttempt=connectionAttempt;
+      if(channel && supabase) {try{await supabase.removeChannel(channel);}catch{}}
+      channel=null;supabase=null;isOnline=false;remoteCursors.clear();remoteDrafts.clear();renderCursors();render();
+      if(!url||!key) {updateConnectionUI('offline');localSave();return;}
+      updateConnectionUI('connecting');
+      try {supabase=createClient(url.trim(),key.trim(),{auth:{persistSession:false,autoRefreshToken:false}});}
+      catch(err) {updateConnectionUI('offline');toast(`Connection settings are invalid: ${err.message}`);return;}
+      channel=supabase.channel(`canvasly-${roomId}`,{config:{broadcast:{self:false},presence:{key:userId}}})
+        .on('broadcast',{event:'item-upsert'},({payload})=>applyRemoteUpsert(payload?.item))
+        .on('broadcast',{event:'items-delete'},({payload})=>applyRemoteDelete(payload?.ids||[]))
+        .on('broadcast',{event:'item-preview'},({payload})=>{const item=payload?.item;if(item&&item.authorId!==userId){remoteDrafts.set(item.id,item);render();}})
+        .on('broadcast',{event:'item-preview-end'},({payload})=>{if(payload?.id){remoteDrafts.delete(payload.id);render();}})
+        .on('broadcast',{event:'cursor'},({payload})=>{if(!payload||payload.userId===userId)return;if(payload.visible===false){remoteCursors.delete(payload.userId);}else remoteCursors.set(payload.userId,payload);renderCursors();})
+        .on('presence',{event:'sync'},()=>renderPresence());
+      channel.subscribe(async status=>{
+        if(thisAttempt!==connectionAttempt)return;
+        if(status==='SUBSCRIBED') {
+          isOnline=true;updateConnectionUI('online');
+          try {await channel.track({userId,name:userName,color:userColor,joinedAt:Date.now()});}catch{}
+          const hasCloudMetadata=await loadBoardMetadataRemote();
+          await loadRemoteItems();
+          if(!hasCloudMetadata) await saveBoardMetadataRemote();
+          for(const rev of getLocalVersions().slice(0,4)) {
+            const {error:revError}=await supabase.from('whiteboard_versions').upsert({id:rev.id,board_id:roomId,title:rev.title||boardTitle,snapshot:rev.snapshot||[],note:rev.note||'Autosave',created_at:rev.created_at||new Date().toISOString()});
+            if(revError)console.warn('Could not upload local revision:',revError.message);
+          }
+          toast('Connected to live collaboration.');
+        } else if(status==='CHANNEL_ERROR'||status==='TIMED_OUT'||status==='CLOSED') {
+          isOnline=false;updateConnectionUI('offline');
+          if(status!=='CLOSED')toast(`Live connection status: ${status.toLowerCase().replace('_',' ')}.`);
+        }
+      });
+    }
+    function renderPresence() {
+      const users=[];
+      if(channel) {
+        try {const state=channel.presenceState();Object.values(state).forEach(entries=>(entries||[]).forEach(u=>{if(!users.some(x=>x.userId===u.userId))users.push(u);}));}catch{}
+      }
+      if(!users.some(u=>u.userId===userId))users.unshift({userId,name:userName,color:userColor});
+      $('#avatarStack').replaceChildren();
+      users.slice(0,5).forEach(u=>{const a=document.createElement('div');a.className='avatar';a.title=u.name||'Collaborator';a.textContent=initials(u.name);a.style.background=u.color||'#1bd96a';$('#avatarStack').append(a);});
+      const rest=Math.max(0,users.length-5);if(rest){const more=document.createElement('div');more.className='avatar';more.style.background='#e9ebf3';more.style.color='#657086';more.textContent=`+${rest}`;$('#avatarStack').append(more);}
+      const label=document.createElement('span');label.className='avatar-count';label.textContent=users.length===1?'You only':`${users.length} ${users.length===1?'person':'people'}`;$('#avatarStack').append(label);
+    }
+    function sendCursor(p) {
+      if(!channel||!isOnline)return;
+      const now=Date.now();if(p&&now-lastCursorSent<45)return;lastCursorSent=now;
+      sendBroadcast('cursor',p?{userId,name:userName,color:userColor,x:p.x,y:p.y,visible:true}:{userId,visible:false});
+    }
+    function renderCursors() {
+      $('#cursorLayer').replaceChildren();
+      for(const c of remoteCursors.values()) {
+        const node=document.createElement('div');node.className='remote-cursor';node.style.left=`${camera.x+c.x*camera.zoom}px`;node.style.top=`${camera.y+c.y*camera.zoom}px`;
+        const svg=document.createElementNS('http://www.w3.org/2000/svg','svg');svg.setAttribute('viewBox','0 0 24 24');svg.setAttribute('fill',c.color||'#1bd96a');svg.innerHTML='<path d="M4 2.5 20 14l-7.1.8-3.7 6.7L4 2.5Z" stroke="white" stroke-width="1.5" stroke-linejoin="round"/>';
+        const name=document.createElement('span');name.textContent=c.name||'Collaborator';name.style.background=c.color||'#1bd96a';node.append(svg,name);$('#cursorLayer').append(node);
+      }
+    }
+
+    function setBoardTitleForId(id,title) {
+      const clean=String(title||'').trim().slice(0,90)||'Untitled whiteboard';
+      storeBoardMeta(id,clean);
+      if(id===roomId) {boardTitle=clean;updateBoardTitleUI();localSave();}
+      if(isOnline&&supabase) {
+        if(id===roomId) saveBoardMetadataRemote();
+        else supabase.from('whiteboard_boards').upsert({id,title:clean,updated_at:new Date().toISOString()}).then(({error})=>{if(error)console.error('Board rename failed:',error.message);});
+      }
+    }
+    function renameBoard(id=roomId) {
+      const current=getBoardMeta(id); const title=current?.title||(id===roomId?boardTitle:`Whiteboard ${id.slice(0,6)}`);
+      showModal({title:'Rename whiteboard',description:'Use a name that makes this board easy to find later.',body:`<div class="field"><label for="renameBoardTitle">Whiteboard name</label><input id="renameBoardTitle" maxlength="90" value="${escapeHtml(title)}" /></div>`,actions:[{label:'Cancel',onClick:closeModal},{label:'Save name',primary:true,onClick:()=>{const next=$('#renameBoardTitle').value.trim();if(!next){toast('Enter a name for this whiteboard.');return;}setBoardTitleForId(id,next);closeModal();toast('Whiteboard renamed.');}}]});
+      setTimeout(()=>$('#renameBoardTitle')?.select(),40);
+    }
+    function createBoard() {
+      showModal({title:'Create a whiteboard',description:'A new saved board will be added to your library.',body:`<div class="field"><label for="newBoardTitle">Whiteboard name</label><input id="newBoardTitle" maxlength="90" value="New whiteboard" /></div>`,actions:[{label:'Cancel',onClick:closeModal},{label:'Create board',primary:true,onClick:()=>{const title=$('#newBoardTitle').value.trim()||'Untitled whiteboard';const id=randomId();storeBoardMeta(id,title);closeModal();const u=new URL(location.href);u.searchParams.set('room',id);location.assign(u.toString());}}]});
+      setTimeout(()=>$('#newBoardTitle')?.select(),40);
+    }
+    async function openBoardManager() {
+      let boards=readBoardCatalog();
+      if(!boards.some(b=>b.id===roomId))boards.unshift(storeBoardMeta(roomId,boardTitle));
+      if(isOnline&&supabase) {
+        const {data,error}=await supabase.from('whiteboard_boards').select('id,title,updated_at').order('updated_at',{ascending:false}).limit(200);
+        if(!error&&data) {
+          for(const row of data) {
+            const t=Date.parse(row.updated_at||'')||Date.now();
+            storeBoardMeta(row.id,row.title,t);
+          }
+          boards=readBoardCatalog();
+        }
+      }
+      boards.sort((a,b)=>(b.updatedAt||0)-(a.updatedAt||0));
+      const body=boards.length?`<div class="library-list">${boards.map(b=>`<div class="library-row ${b.id===roomId?'current':''}"><div class="library-main"><div class="library-title">${escapeHtml(b.title||`Whiteboard ${b.id.slice(0,6)}`)}${b.id===roomId?' · Current':''}</div><div class="library-meta">${b.updatedAt?`Edited ${new Date(b.updatedAt).toLocaleString()}`:'Saved board'} · ${escapeHtml(b.id.slice(0,8))}</div></div><div class="library-actions"><button class="button" data-open-board="${escapeHtml(b.id)}" ${b.id===roomId?'disabled':''}>Open</button><button class="button" data-rename-board="${escapeHtml(b.id)}">Rename</button></div></div>`).join('')}</div>`:'<div class="empty-state">No saved whiteboards yet. Create a board to start your library.</div>';
+      showModal({title:'My whiteboards',description:isOnline?'Boards are saved in this browser and synced to your connected cloud project.':'Boards are autosaved in this browser. Connect Supabase to access the same library from other devices.',body:body+`<div class="modal-note">Local boards remain in this browser even when you close the site. Cloud library and revisions require Supabase.</div>`,actions:[{label:'Close',onClick:closeModal},{label:'History',onClick:()=>{closeModal();openHistory();}},{label:'Save current board',onClick:async()=>{closeModal();await saveCurrentBoardNow();}},{label:'New whiteboard',primary:true,onClick:createBoard}]});
+      $('#modalBody').querySelectorAll('[data-open-board]').forEach(btn=>btn.addEventListener('click',()=>{const id=btn.dataset.openBoard;const u=new URL(location.href);u.searchParams.set('room',id);location.assign(u.toString());}));
+      $('#modalBody').querySelectorAll('[data-rename-board]').forEach(btn=>btn.addEventListener('click',()=>renameBoard(btn.dataset.renameBoard)));
+    }
+    async function openHistory() {
+      let versions=getLocalVersions();
+      if(isOnline&&supabase) {
+        const {data,error}=await supabase.from('whiteboard_versions').select('id,board_id,title,snapshot,note,created_at').eq('board_id',roomId).order('created_at',{ascending:false}).limit(50);
+        if(!error&&data) {
+          const byId=new Map(); [...versions,...data].forEach(v=>byId.set(v.id,v));
+          versions=[...byId.values()].sort((a,b)=>(Date.parse(b.created_at)||0)-(Date.parse(a.created_at)||0)).slice(0,50);
+          try {localStorage.setItem(`canvasly_versions_${roomId}`,JSON.stringify(versions.filter(v=>v.snapshot).slice(0,4)));} catch {}
+        } else toast('Could not load cloud revision history. Showing browser history.');
+      }
+      const body=versions.length?`<div class="history-list">${versions.map((v,i)=>`<div class="history-row"><div class="history-copy"><div class="history-title">${escapeHtml(v.note||'Autosave')}</div><div class="history-meta">${escapeHtml(v.title||boardTitle)}<br>${new Date(v.created_at||Date.now()).toLocaleString()} · ${(v.snapshot||[]).length} objects</div></div><button class="button" data-restore-version="${escapeHtml(v.id)}">Restore</button></div>`).join('')}</div>`:'<div class="empty-state">No revisions saved yet. Edits are automatically captured after you pause for a moment.</div>';
+      showModal({title:'Version history',description:'Choose a saved revision to restore the whiteboard to that point in time.',body:body+`<div class="modal-note">${isOnline?'Cloud history is enabled. The most recent revisions are kept.':'Showing revisions saved in this browser. Connect Supabase for cloud history across devices.'}</div>`,actions:[{label:'Close',onClick:closeModal},{label:'Save revision now',primary:true,onClick:async()=>{await saveVersionNow('Manual revision',true);closeModal();toast('Revision saved.');}}]});
+      $('#modalBody').querySelectorAll('[data-restore-version]').forEach(btn=>btn.addEventListener('click',()=>{
+        const entry=versions.find(v=>v.id===btn.dataset.restoreVersion);if(!entry||!Array.isArray(entry.snapshot)){toast('This revision could not be loaded.');return;}
+        showModal({title:'Restore this revision?',description:'The current board will be preserved as a revision before restoring the selected snapshot.',body:`<div class="modal-note">Restore <strong>${escapeHtml(entry.title||'Whiteboard')}</strong> from ${new Date(entry.created_at||Date.now()).toLocaleString()}? This replaces the current whiteboard contents for everyone in the shared room.</div>`,actions:[{label:'Cancel',onClick:closeModal},{label:'Restore revision',primary:true,onClick:()=>restoreVersion(entry)}]});
+      }));
+    }
+    async function restoreVersion(entry) {
+      closeModal();
+      await saveVersionNow('Before restore',true);
+      const oldIds=[...items.keys()];
+      items.clear(); imageCache.clear();
+      for(const item of entry.snapshot||[]) if(item&&item.id)items.set(item.id,deepCopy(item));
+      if(entry.title)boardTitle=entry.title;
+      storeBoardMeta(roomId,boardTitle);updateBoardTitleUI();selectedId=null;undoStack=[];redoStack=[];
+      if(oldIds.length)await emitDelete(oldIds);
+      for(const item of items.values())await emitUpsert(item);
+      render();localSave();if(isOnline)await saveBoardMetadataRemote();
+      await saveVersionNow('Restored revision',true);
+      toast('Whiteboard restored to the selected revision.');
+    }
+
+    function createFrameDialog() {
+      showModal({title:'Create a frame',description:'Frames are named areas you can navigate like slides or sections.',body:'<div class="field"><label for="newFrameName">Frame name</label><input id="newFrameName" maxlength="90" value="New section" /></div><div class="field"><label for="frameSize">Starting size</label><select id="frameSize" style="width:100%;padding:10px;border:1px solid #e0e4ed;border-radius:8px;background:#fbfcfe"><option value="900x600">Presentation (900 × 600)</option><option value="1200x800">Large workspace (1200 × 800)</option><option value="1600x900">Widescreen (1600 × 900)</option></select></div>',actions:[{label:'Cancel',onClick:closeModal},{label:'Create frame',primary:true,onClick:()=>{const name=$('#newFrameName').value.trim()||'Untitled frame';const [w,h]=$('#frameSize').value.split('x').map(Number);closeModal();createFrame(name,w,h);}}]});
+    }
+    function createFrame(name='New section',w=900,h=600) {
+      const p=viewportCenterWorld(),existing=orderedItems().filter(i=>Number.isFinite(i.zIndex));
+      const minLayer=existing.length?Math.min(...existing.map(i=>i.zIndex)):10;
+      const frame=makeBase('frame',{x:p.x-w/2,y:p.y-h/2,w,h,name,color:'#1bd96a',zIndex:minLayer-10,locked:false,hidden:false});
+      commitAdd(frame);selectedId=frame.id;setTool('select');focusFrame(frame);toast(`Frame “${name}” created.`);
+    }
+    function focusFrame(frame) {
+      const pad=120;camera.zoom=Math.max(.12,Math.min(2.5,(canvas.clientWidth-pad)/frame.w,(canvas.clientHeight-pad)/frame.h));
+      camera.x=canvas.clientWidth/2-(frame.x+frame.w/2)*camera.zoom;camera.y=canvas.clientHeight/2-(frame.y+frame.h/2)*camera.zoom;
+      saveView();updateZoomUI();render();renderCursors();
+    }
+    function openFrames() {
+      const frames=orderedItems().filter(item=>item.type==='frame');
+      const body=frames.length?`<div class="frame-list">${frames.map(frame=>`<div class="library-row"><div class="library-main"><div class="library-title">${escapeHtml(frame.name||'Untitled frame')}</div><div class="library-meta">${Math.round(frame.w)} × ${Math.round(frame.h)}${frame.locked?' · Locked':''}</div></div><div class="library-actions"><button class="button" data-frame-focus="${escapeHtml(frame.id)}">Go to</button><button class="button" data-frame-rename="${escapeHtml(frame.id)}">Rename</button><button class="button" data-frame-delete="${escapeHtml(frame.id)}">Delete</button></div></div>`).join('')}</div>`:'<div class="empty-state">No frames yet. Add one to organize this infinite canvas into named areas.</div>';
+      showModal({title:'Frames & sections',description:'Navigate named areas of the board. Frames can be moved, renamed, locked, and focused from this menu.',body:body+`<div class="modal-note">Frames are local to this board and sync with other collaborators when cloud sync is connected.</div>`,actions:[{label:'Close',onClick:closeModal},{label:'New frame',primary:true,onClick:createFrameDialog}]});
+      $('#modalBody').querySelectorAll('[data-frame-focus]').forEach(btn=>btn.addEventListener('click',()=>{const frame=items.get(btn.dataset.frameFocus);if(frame){closeModal();focusFrame(frame);}}));
+      $('#modalBody').querySelectorAll('[data-frame-rename]').forEach(btn=>btn.addEventListener('click',()=>{const frame=items.get(btn.dataset.frameRename);if(frame)editObject(frame);}));
+      $('#modalBody').querySelectorAll('[data-frame-delete]').forEach(btn=>btn.addEventListener('click',()=>{const id=btn.dataset.frameDelete;commitDelete([id]);openFrames();}));
+    }
+    const boardTemplates = {
+      brainstorm: {
+        title:'Brainstorm', subtitle:'Generate ideas, then cluster and prioritize them.',
+        notes:[
+          {x:-315,y:-105,text:'Idea 01\nWhat if…?',fill:'#b5ff3d'},
+          {x:-95,y:-105,text:'Idea 02\nExplore a different angle.',fill:'#7cffb2'},
+          {x:125,y:-105,text:'Idea 03\nBuild on another idea.',fill:'#d5ffd6'},
+          {x:-315,y:65,text:'Questions\nWhat do we need to learn?',fill:'#d5ffd6'},
+          {x:-95,y:65,text:'Opportunities\nWhere is the leverage?',fill:'#b5ff3d'},
+          {x:125,y:65,text:'Next steps\nWhat can we test?',fill:'#7cffb2'}
+        ], noteW:190, noteH:145, titleY:-175
+      },
+      swot: {
+        title:'SWOT analysis', subtitle:'Assess internal strengths and weaknesses alongside external opportunities and threats.',
+        notes:[
+          {x:-250,y:-85,text:'STRENGTHS\nWhat do we do well?',fill:'#7cffb2'},
+          {x:20,y:-85,text:'WEAKNESSES\nWhat needs improving?',fill:'#ffd166'},
+          {x:-250,y:95,text:'OPPORTUNITIES\nWhat could help us grow?',fill:'#b5ff3d'},
+          {x:20,y:95,text:'THREATS\nWhat could hold us back?',fill:'#d5ffd6'}
+        ], noteW:230, noteH:150, titleY:-185
+      },
+      retro: {
+        title:'Sprint retrospective', subtitle:'Make the next sprint better by looking at what happened.',
+        notes:[
+          {x:-340,y:-65,text:'WENT WELL\nWhat should we keep doing?',fill:'#7cffb2'},
+          {x:-110,y:-65,text:'TO IMPROVE\nWhat should change?',fill:'#b5ff3d'},
+          {x:120,y:-65,text:'ACTION ITEMS\nWhat will we try next?',fill:'#d5ffd6'}
+        ], noteW:215, noteH:175, titleY:-145
+      },
+      empathy: {
+        title:'Empathy map', subtitle:'Describe the experience from the user’s perspective.',
+        notes:[
+          {x:-235,y:-85,text:'SAYS\nWhat does the user say out loud?',fill:'#7cffb2'},
+          {x:15,y:-85,text:'THINKS\nWhat might they be thinking?',fill:'#b5ff3d'},
+          {x:-235,y:95,text:'DOES\nWhat actions do they take?',fill:'#d5ffd6'},
+          {x:15,y:95,text:'FEELS\nWhat emotions might they have?',fill:'#90e0ef'}
+        ], noteW:220, noteH:150, titleY:-190
+      },
+      action: {
+        title:'Action plan', subtitle:'Turn discussion into accountable next steps.',
+        notes:[
+          {x:-340,y:-70,text:'TASK\nWhat needs to happen?',fill:'#7cffb2'},
+          {x:-110,y:-70,text:'OWNER\nWho will do it?',fill:'#b5ff3d'},
+          {x:120,y:-70,text:'DUE DATE\nWhen is it due?',fill:'#d5ffd6'}
+        ], noteW:215, noteH:170, titleY:-150
+      }
+    };
+    function openTemplateLibrary() {
+      const labels={brainstorm:'Brainstorm',swot:'SWOT analysis',retro:'Sprint retrospective',empathy:'Empathy map',action:'Action plan'};
+      const body=`<div class="diagram-grid template-grid">${Object.entries(boardTemplates).map(([key,t])=>`<button class="diagram-choice" data-template="${key}"><strong>${labels[key]}</strong><span>${t.subtitle}</span></button>`).join('')}</div><div class="modal-note">Templates are inserted at the current canvas center. Each note and heading is a regular object: move, edit, recolor, lock, or delete them individually.</div>`;
+      showModal({title:'Template library',description:'Start with a structure for brainstorming, planning, user research, or team reflection.',body,actions:[{label:'Close',onClick:closeModal}]});
+      $('#modalBody').querySelectorAll('[data-template]').forEach(btn=>btn.addEventListener('click',()=>{const key=btn.dataset.template;closeModal();insertBoardTemplate(key);}));
+    }
+    function insertBoardTemplate(key) {
+      const def=boardTemplates[key];if(!def)return;
+      const p=viewportCenterWorld();const created=[];
+      created.push(makeBase('text',{x:p.x-220,y:p.y+def.titleY,text:def.title,fontSize:30,color:'#7cffb2'}));
+      created.push(makeBase('text',{x:p.x-220,y:p.y+def.titleY+38,text:def.subtitle,fontSize:13,color:'#1bd96a'}));
+      for(const note of def.notes) created.push(makeBase('sticky',{x:p.x+note.x,y:p.y+note.y,w:def.noteW,h:def.noteH,text:note.text,fill:note.fill,color:'#102318',width:1}));
+      applyUpserts(created,true);selectedId=null;render();saveVersionNow(`Inserted ${def.title} template`,true).catch(()=>{});toast(`${def.title} template added.`);
+    }
+    const boardReactions=[['👍','Agree'],['❤️','Love it'],['💡','Idea'],['👀','Look here'],['✅','Approved'],['❓','Question'],['🎉','Celebrate'],['🚀','Let’s go'],['🤔','Thinking'],['👎','Disagree']];
+    function openReactionLibrary() {
+      const body=`<div class="reaction-grid">${boardReactions.map(([emoji,label])=>`<button class="reaction-choice" data-reaction="${emoji}" title="${label}"><span>${emoji}</span><small>${label}</small></button>`).join('')}</div><div class="modal-note">Reactions are placed as editable text objects on the board, so collaborators can see them and move them like other objects. Use them to vote or call attention to an idea.</div>`;
+      showModal({title:'Reactions & voting',description:'Add a reaction stamp to the current board center.',body,actions:[{label:'Close',onClick:closeModal}]});
+      $('#modalBody').querySelectorAll('[data-reaction]').forEach(btn=>btn.addEventListener('click',()=>{const reaction=btn.dataset.reaction;closeModal();addBoardReaction(reaction);}));
+    }
+    function addBoardReaction(reaction) {
+      const p=viewportCenterWorld();const item=makeBase('text',{x:p.x-24,y:p.y-30,text:reaction,fontSize:54,color:selectedColor});
+      commitAdd(item);selectedId=item.id;setTool('select');render();toast(`${reaction} reaction added.`);
+    }
+
+    const diagramDefinitions=[
+      {type:'uml-class',label:'UML class',group:'UML',detail:'Class name, attributes, and methods.'},
+      {type:'use-case',label:'Use case',group:'UML',detail:'Ellipse node for a use-case diagram.'},
+      {type:'database',label:'Database',group:'Architecture',detail:'Database cylinder with an editable label.'},
+      {type:'server',label:'Server',group:'Architecture',detail:'Server stack for infrastructure maps.'},
+      {type:'cloud',label:'Cloud',group:'Architecture',detail:'Generic cloud node for network diagrams.'},
+      {type:'aws-service',label:'AWS service block',group:'Cloud providers',detail:'Generic editable cloud-service block.'},
+      {type:'aws-lambda',label:'AWS Lambda',group:'Cloud providers',detail:'Compute service icon-style block.'},
+      {type:'aws-ec2',label:'AWS EC2',group:'Cloud providers',detail:'Virtual server service block.'},
+      {type:'aws-s3',label:'AWS S3',group:'Cloud providers',detail:'Object-storage service block.'},
+      {type:'aws-rds',label:'AWS RDS',group:'Cloud providers',detail:'Relational database service block.'},
+      {type:'azure-service',label:'Azure service block',group:'Cloud providers',detail:'Generic editable cloud-service block.'},
+      {type:'azure-functions',label:'Azure Functions',group:'Cloud providers',detail:'Serverless compute service block.'},
+      {type:'azure-vm',label:'Azure Virtual Machine',group:'Cloud providers',detail:'Virtual server service block.'},
+      {type:'azure-blob',label:'Azure Blob Storage',group:'Cloud providers',detail:'Object-storage service block.'},
+      {type:'azure-sql',label:'Azure SQL',group:'Cloud providers',detail:'Relational database service block.'},
+      {type:'wireframe',label:'Web wireframe',group:'Wireframes',detail:'Browser panel with placeholder content areas.'},
+      {type:'mindmap',label:'Mind-map node',group:'Planning',detail:'Rounded node for brainstorming maps.'},
+      {type:'kanban',label:'Kanban board',group:'Planning',detail:'Three-column To Do / In Progress / Done board.'}
+    ];
+    function openDiagramLibrary() {
+      const body=`<div class="diagram-grid">${diagramDefinitions.map(d=>`<button class="diagram-choice" data-diagram="${d.type}"><strong>${d.label}</strong><span>${d.group} · ${d.detail}</span></button>`).join('')}</div><div class="modal-note">These are editable, label-based architecture symbols rather than official vendor artwork. Double-click a placed shape to edit its label.</div>`;
+      showModal({title:'Diagram library',description:'Add reusable UML, cloud architecture, wireframe, mind-map, and Kanban elements.',body,actions:[{label:'Close',onClick:closeModal}]});
+      $('#modalBody').querySelectorAll('[data-diagram]').forEach(btn=>btn.addEventListener('click',()=>{const def=diagramDefinitions.find(d=>d.type===btn.dataset.diagram);if(def){closeModal();createDiagram(def);}}));
+    }
+    function createDiagram(def) {
+      const p=viewportCenterWorld();let w=210,h=130;
+      if(def.type==='uml-class'){w=210;h=132;}else if(def.type==='database'){w=180;h=150;}else if(def.type==='server'){w=190;h=150;}else if(def.type==='wireframe'){w=330;h=220;}else if(def.type==='kanban'){w=380;h=240;}else if(def.type.startsWith('aws-')||def.type.startsWith('azure-')){w=230;h=84;}else if(def.type==='cloud'){w=220;h=150;}else if(def.type==='mindmap'){w=190;h=85;}
+      const item=makeBase('diagram',{diagramType:def.type,label:def.label,x:p.x-w/2,y:p.y-h/2,w,h});commitAdd(item);selectedId=item.id;setTool('select');render();toast(`${def.label} added.`);
+    }
+    function editObject(item) {
+      const key=item.type==='frame'?'name':(['text','sticky'].includes(item.type)?'text':'label');
+      const value=String(item[key]||'');const title=item.type==='frame'?'Rename frame':item.type==='diagram'?'Edit diagram label':item.type==='sticky'?'Edit sticky note':'Edit text';
+      showModal({title,description:'Update the selected object. Changes sync to collaborators when cloud sync is enabled.',body:`<div class="field"><label for="objectText">${key==='name'?'Frame name':key==='label'?'Shape label':'Text'}</label><textarea id="objectText" maxlength="1200">${escapeHtml(value)}</textarea></div>`,actions:[{label:'Cancel',onClick:closeModal},{label:'Save changes',primary:true,onClick:()=>{const next=$('#objectText').value.trim();if(!next){toast('Enter a value first.');return;}const before=deepCopy(item),after={...deepCopy(item),[key]:next,updatedAt:Date.now(),authorId:userId,authorName:userName};commitUpdate(before,after);closeModal();}}]});
+    }
+    function saveLayerOrder(order) {
+      const before=order.map(item=>deepCopy(item));
+      order.forEach((item,index)=>{item.zIndex=(index+1)*10;item.updatedAt=Date.now();items.set(item.id,item);});
+      const after=order.map(item=>deepCopy(item));nextLayer=Math.max(nextLayer,order.length*10+20);
+      after.forEach(item=>emitUpsert(item));pushHistory({kind:'update',before,after});render();localSave();
+    }
+    function moveLayer(id,direction) {
+      const order=orderedItems(),index=order.findIndex(item=>item.id===id),next=index+direction;
+      if(index<0||next<0||next>=order.length)return;
+      [order[index],order[next]]=[order[next],order[index]];saveLayerOrder(order);
+    }
+    function toggleObjectProperty(id,key) {
+      const item=items.get(id);if(!item)return;const before=deepCopy(item),after={...deepCopy(item),[key]:!item[key],updatedAt:Date.now(),authorId:userId,authorName:userName};
+      if(key==='hidden'&&after.hidden&&selectedId===id)selectedId=null;
+      commitUpdate(before,after);
+    }
+    function layerItemName(item) {
+      if(item.type==='frame')return `Frame · ${item.name||'Untitled'}`;
+      if(item.type==='diagram')return `${item.diagramType||'Diagram'} · ${item.label||'Untitled'}`;
+      if(item.type==='text'||item.type==='sticky')return `${item.type==='sticky'?'Sticky':'Text'} · ${String(item.text||'').split('\n')[0].slice(0,32)}`;
+      return item.type.charAt(0).toUpperCase()+item.type.slice(1);
+    }
+    function openLayers() {
+      const asc=orderedItems(),rows=[...asc].reverse();
+      const body=rows.length?`<div class="layer-list">${rows.map((item,visualIndex)=>`<div class="layer-row"><div class="layer-title ${item.hidden?'layer-muted':''}">${escapeHtml(layerItemName(item))}${item.locked?' 🔒':''}${item.hidden?' · Hidden':''}</div><div class="layer-controls"><button class="button" title="Select object" data-layer-select="${escapeHtml(item.id)}">Select</button><button class="button" title="Move forward" data-layer-up="${escapeHtml(item.id)}" ${visualIndex===0?'disabled':''}>↑</button><button class="button" title="Move backward" data-layer-down="${escapeHtml(item.id)}" ${visualIndex===rows.length-1?'disabled':''}>↓</button><button class="button" title="Lock or unlock" data-layer-lock="${escapeHtml(item.id)}">${item.locked?'Unlock':'Lock'}</button><button class="button" title="Show or hide" data-layer-hide="${escapeHtml(item.id)}">${item.hidden?'Show':'Hide'}</button></div></div>`).join('')}</div>`:'<div class="empty-state">No objects on this board yet. Draw, paste, or insert a diagram first.</div>';
+      showModal({title:'Layers & object controls',description:'Higher layers appear above lower layers. Locked objects can be selected but not accidentally moved.',body:body+`<div class="modal-note">Use ↑ / ↓ to change an object’s stacking order. Hidden and locked status is saved with the object and synced to the room.</div>`,actions:[{label:'Close',onClick:closeModal},{label:'Send selected to back',onClick:()=>{if(!selectedId){toast('Select an object first.');return;}const order=orderedItems(),idx=order.findIndex(i=>i.id===selectedId);if(idx>0){const [item]=order.splice(idx,1);order.unshift(item);saveLayerOrder(order);openLayers();}}},{label:'Bring selected to front',primary:true,onClick:()=>{if(!selectedId){toast('Select an object first.');return;}const order=orderedItems(),idx=order.findIndex(i=>i.id===selectedId);if(idx>=0&&idx<order.length-1){const [item]=order.splice(idx,1);order.push(item);saveLayerOrder(order);openLayers();}}}]});
+      $('#modalBody').querySelectorAll('[data-layer-select]').forEach(btn=>btn.addEventListener('click',()=>{selectedId=btn.dataset.layerSelect;closeModal();setTool('select');render();}));
+      $('#modalBody').querySelectorAll('[data-layer-up]').forEach(btn=>btn.addEventListener('click',()=>{moveLayer(btn.dataset.layerUp,1);openLayers();}));
+      $('#modalBody').querySelectorAll('[data-layer-down]').forEach(btn=>btn.addEventListener('click',()=>{moveLayer(btn.dataset.layerDown,-1);openLayers();}));
+      $('#modalBody').querySelectorAll('[data-layer-lock]').forEach(btn=>btn.addEventListener('click',()=>{toggleObjectProperty(btn.dataset.layerLock,'locked');openLayers();}));
+      $('#modalBody').querySelectorAll('[data-layer-hide]').forEach(btn=>btn.addEventListener('click',()=>{toggleObjectProperty(btn.dataset.layerHide,'hidden');openLayers();}));
+    }
+
+    function openSettings() {
+      const url=localStorage.getItem('canvasly_supabase_url')||'';
+      const key=localStorage.getItem('canvasly_supabase_key')||'';
+      showModal({title:'Live collaboration setup',description:'Connect this whiteboard to a Supabase project to sync edits between browsers.',icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-11V5l-8-3-8 3v6c0 7 8 11 8 11Z"/><path d="m9 12 2 2 4-4"/></svg>',body:`
+        <div class="field"><label for="displayName">Your display name</label><input id="displayName" maxlength="35" value="${escapeHtml(userName)}" placeholder="e.g. Alex" /></div>
+        <div class="field"><label for="supabaseUrl">Supabase project URL</label><input id="supabaseUrl" type="url" value="${escapeHtml(url)}" placeholder="https://your-project.supabase.co" autocomplete="off"/><span class="field-help">Found in Supabase → Project Settings → API.</span></div>
+        <div class="field"><label for="supabaseKey">Supabase anon / publishable key</label><input id="supabaseKey" value="${escapeHtml(key)}" placeholder="sb_publishable_… or legacy anon key" autocomplete="off"/><span class="field-help">Use the public anon/publishable key, never a service-role secret.</span></div>
+        <div class="modal-note">Live sync also requires the table and SQL policies in <strong>supabase-setup.sql</strong> from the project files. See README.md for setup steps.</div>
+      `,actions:[{label:'Use local mode',onClick:()=>{localStorage.removeItem('canvasly_supabase_url');localStorage.removeItem('canvasly_supabase_key');startSync('','');closeModal();toast('Local mode enabled.');}},{label:'Connect & save',primary:true,onClick:()=>{
+        const name=$('#displayName').value.trim()||`Guest ${Math.floor(Math.random()*900+100)}`;userName=name;localStorage.setItem('canvasly_user_name',userName);
+        const newUrl=$('#supabaseUrl').value.trim(),newKey=$('#supabaseKey').value.trim();
+        if((newUrl&&!/^https:\/\/.+/.test(newUrl))||(newKey&&!newUrl)){toast('Enter a valid HTTPS project URL and its public key.');return;}
+        if(newUrl&&newKey){localStorage.setItem('canvasly_supabase_url',newUrl);localStorage.setItem('canvasly_supabase_key',newKey);}else{localStorage.removeItem('canvasly_supabase_url');localStorage.removeItem('canvasly_supabase_key');}
+        closeModal();renderPresence();startSync(newUrl,newKey);
+      }}]});
+    }
+    function escapeHtml(str) {return String(str).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+    function openShare() {
+      const url=new URL(location.href);url.searchParams.set('room',roomId);const link=url.toString();
+      const connected=isOnline;
+      showModal({title:'Share this whiteboard',description:'Send this room link to the people you want to collaborate with.',icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="m8.7 10.7 6.6-4.4M8.7 13.3l6.6 4.4"/></svg>',body:`
+        <div class="field"><label for="shareLink">Room link</label><input id="shareLink" readonly value="${escapeHtml(link)}" /></div>
+        <div class="modal-note" style="${connected?'background:#eaf8f0;border-color:#ccebd9;color:#287b55':''}">${connected?'Live sync is connected. Anyone using this link and the same Supabase project credentials can collaborate.':'This link identifies the room, but live collaboration is not connected yet. Connect Supabase in Settings, then have collaborators configure the same project once.'}</div>
+        <p class="key-note">This starter setup grants broad anonymous access across the table, not just this room. Do not put sensitive information on it; use authenticated room-level policies for private boards.</p>
+      `,actions:[{label:'Close',onClick:closeModal},{label:'Copy link',primary:true,onClick:async()=>{try{await navigator.clipboard.writeText(link);toast('Board link copied.');closeModal();}catch{const input=$('#shareLink');input.select();document.execCommand('copy');toast('Board link copied.');}}}]});
+    }
+    async function downloadPNG() {
+      await Promise.all([...items.values()].filter(item=>item.type==='image').map(item=>new Promise(resolve=>{const img=getBoardImage(item);if(img.complete)resolve();else{img.onload=()=>resolve();img.onerror=()=>resolve();}})));
+      const rect=stage.getBoundingClientRect(),scale=2;const output=document.createElement('canvas');output.width=Math.max(1,Math.round(rect.width*scale));output.height=Math.max(1,Math.round(rect.height*scale));const c=output.getContext('2d');
+      c.scale(scale,scale);c.fillStyle='#fff';c.fillRect(0,0,rect.width,rect.height);
+      if(isGridOn){const step=camera.zoom<.25?88:camera.zoom<.5?44:22;for(let x=0;x<rect.width;x+=step*camera.zoom)for(let y=0;y<rect.height;y+=step*camera.zoom){c.fillStyle='rgba(27,217,106,.20)';c.beginPath();c.arc(x,y,.65,0,Math.PI*2);c.fill();}}
+      c.save();c.translate(camera.x,camera.y);c.scale(camera.zoom,camera.zoom);for(const item of orderedItems())if(!item.hidden)drawElement(c,item);c.restore();
+      const a=document.createElement('a');a.download=`joard-${roomId}.png`;a.href=output.toDataURL('image/png');a.click();toast('PNG exported.');
+    }
+
+    document.addEventListener('keydown',e=>{
+      const active=document.activeElement;
+      const typing=active&&(['INPUT','TEXTAREA','SELECT'].includes(active.tagName)||active.isContentEditable);
+      if(typing)return;
+      const mod=e.ctrlKey||e.metaKey;
+      if(mod&&e.key.toLowerCase()==='c'&&selectedId){e.preventDefault();copySelectedObject();return;}
+      if(mod&&e.key.toLowerCase()==='x'&&selectedId){e.preventDefault();copySelectedObject();commitDelete([selectedId]);return;}
+      if(mod&&e.key.toLowerCase()==='z'){e.preventDefault();e.shiftKey?redo():undo();return;}
+      if(mod&&e.key.toLowerCase()==='y'){e.preventDefault();redo();return;}
+      if(mod&&e.key==='0'){e.preventDefault();camera={x:0,y:0,zoom:1};saveView();updateZoomUI();render();renderCursors();return;}
+      if(mod||e.altKey)return;
+      const keys={v:'select',p:'pen',h:'highlighter',e:'eraser',l:'line',a:'arrow',r:'rect',o:'ellipse',t:'text',n:'sticky'};
+      const k=e.key.toLowerCase();
+      if(keys[k]){setTool(keys[k]);return;}
+      if(e.key==='Escape'){closeModal();return;}
+      if((e.key==='Delete'||e.key==='Backspace')&&selectedId){e.preventDefault();commitDelete([selectedId]);return;}
+      if(e.key==='+'||e.key==='='){zoomAt(camera.zoom*1.2);return;}
+      if(e.key==='-'){zoomAt(camera.zoom/1.2);return;}
+      if(k==='f'){fitBoard();return;}
+      if(k==='g'){isGridOn=!isGridOn;stage.classList.toggle('grid-on',isGridOn);$('#gridBtn').style.color=isGridOn?'var(--accent)':'';render();return;}
+    });
+
+    document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='hidden'){localSave();if(supabase&&isOnline){saveBoardMetadataRemote();for(const item of items.values())emitUpsert(item);}saveVersionNow('Autosave').catch(()=>{});}});
+    window.addEventListener('beforeunload',()=>{try{localStorage.setItem(localKey,JSON.stringify([...items.values()]));storeBoardMeta(roomId,boardTitle);}catch{}});
+    storeBoardMeta(roomId,boardTitle,getBoardMeta(roomId)?.updatedAt||Date.now());
+    updateBoardTitleUI();
+    loadLocal();initCanvas();setTool('pen');updateConnectionUI('offline');localSave();updateZoomUI();
+    renderPresence();
+    const savedUrl=localStorage.getItem('canvasly_supabase_url')||'';
+    const savedKey=localStorage.getItem('canvasly_supabase_key')||'';
+    if(savedUrl&&savedKey) startSync(savedUrl,savedKey);
+  </script>
+</body>
+</html>
