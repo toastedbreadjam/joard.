@@ -32,7 +32,7 @@
     .brand-mark { width: 34px; height: 34px; display: grid; place-items: center; border-radius: 11px; background: linear-gradient(145deg,#726aff,#5147d7); color: white; box-shadow: 0 5px 12px #6158e835; }
     .brand-mark svg { width: 22px; height: 22px; }
     .brand-name { font-size: 16px; font-weight: 760; letter-spacing: -.55px; }
-    .brand-sub { font-size: 10px; color: #9098a9; letter-spacing: 1.2px; text-transform: uppercase; margin-top: -2px; }
+    .brand-sub { font-size: 10px; color: #9098a9; letter-spacing: 1.2px; text-transform: none; margin-top: -2px; }
     .room-meta { display: flex; flex-direction: column; min-width: 130px; max-width: 250px; gap: 2px; }
     .room-title { font-size: 13px; font-weight: 690; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
     .room-id { color: var(--muted); font-size: 11px; display: flex; align-items: center; gap: 5px; }
@@ -51,16 +51,16 @@
     .button.primary { background: var(--accent); border-color: var(--accent); color: white; box-shadow: 0 4px 12px #6158e828; }
     .button.primary:hover { background: var(--accent-dark); }
     .workspace { display: grid; grid-template-columns: 76px minmax(0,1fr) 232px; flex: 1; min-height: 0; }
-    .left-rail { background: #fff; border-right: 1px solid var(--line); display: flex; flex-direction: column; align-items: center; padding: 17px 10px 12px; gap: 13px; z-index: 3; }
-    .tool-group { width: 100%; display: flex; flex-direction: column; align-items: center; gap: 5px; }
+    .left-rail { background: #fff; border-right: 1px solid var(--line); display: flex; flex-direction: column; align-items: center; padding: 17px 10px 12px; gap: 13px; z-index: 3; overflow-y:auto; overscroll-behavior:contain; scrollbar-width:thin; }
+    .tool-group { width: 100%; display: flex; flex-direction: column; align-items: center; gap: 5px; flex-shrink:0; }
     .group-label { font-size: 9px; color: #9ba2b2; font-weight: 760; letter-spacing: 1px; margin-bottom: 3px; }
     .tool { height: 40px; width: 42px; border: 1px solid transparent; border-radius: 11px; background: transparent; color: #657086; display: grid; place-items: center; cursor: pointer; position: relative; }
     .tool svg { width: 19px; height: 19px; stroke-width: 1.8; }
     .tool:hover { color: var(--accent); background: #f6f5ff; }
     .tool.active { color: var(--accent); border-color: #dddbff; background: var(--accent-soft); box-shadow: inset 0 0 0 1px #ffffff; }
     .tool.active::after { content: ""; width: 3px; height: 17px; position: absolute; left: -11px; background: var(--accent); border-radius: 0 3px 3px 0; }
-    .rail-separator { width: 34px; height: 1px; background: var(--line); }
-    .rail-bottom { margin-top: auto; display: flex; flex-direction: column; gap: 7px; align-items: center; }
+    .rail-separator { width: 34px; height: 1px; background: var(--line); flex-shrink:0; }
+    .rail-bottom { margin-top: auto; display: flex; flex-direction: column; gap: 7px; align-items: center; flex-shrink:0; }
     .color-holder { position: relative; }
     .current-color { width: 28px; height: 28px; border: 3px solid #fff; outline: 1px solid #dfe3ec; border-radius: 50%; cursor: pointer; padding: 0; }
     .color-swatch-row { display: grid; grid-template-columns: repeat(3, 16px); gap: 6px; padding: 2px 0; }
@@ -70,6 +70,9 @@
     .canvas-toolbar { height: 50px; flex: 0 0 50px; display: flex; align-items: center; gap: 9px; padding: 0 20px; background: var(--app-bg); }
     .tool-description { display: flex; align-items: center; gap: 7px; color: #4c556a; font-weight: 650; font-size: 12px; }
     .tool-description svg { width: 15px; height: 15px; color: var(--accent); }
+    .selection-mode-control { display:flex; align-items:center; gap:6px; font-size:10px; color:#8fb79a; white-space:nowrap; }
+    .selection-mode-control select { max-width:106px; padding:6px 8px; border:1px solid #28553a; border-radius:8px; background:#051008; color:#d9ffe4; font-size:11px; }
+    .selection-mode-control select:focus { outline:2px solid #1bd96a55; outline-offset:1px; }
     .toolbar-separator { height: 22px; width: 1px; background: #e0e4ed; margin: 0 3px; }
     .size-label { color: #80889b; font-size: 11px; }
     .size-slider { width: 106px; accent-color: var(--accent); cursor: pointer; }
@@ -284,7 +287,7 @@
     <header class="topbar">
       <div class="brand">
         <div class="brand-mark" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M4 16.5 7.7 5l4.2 13 3.2-9 2.2 6.1L20 8"/><path d="M3 20h18" opacity=".8"/></svg></div>
-        <div class="brand-text"><div class="brand-name">joard.</div><div class="brand-sub">Ideas in motion</div></div>
+        <div class="brand-text"><div class="brand-name">joard.</div><div class="brand-sub">toastedbreadjam</div></div>
       </div>
       <div class="room-meta"><div class="room-title" id="roomTitle">Untitled whiteboard</div><div class="room-id" id="connectionLabel">Local board · not synced</div></div>
       <div class="top-spacer"></div>
@@ -292,7 +295,6 @@
         <button class="icon-button" id="undoBtn" title="Undo (Ctrl+Z)" aria-label="Undo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M9 14 4 9l5-5"/><path d="M4 9h9a7 7 0 0 1 0 14h-2"/></svg></button>
         <button class="icon-button" id="redoBtn" title="Redo (Ctrl+Shift+Z)" aria-label="Redo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="m15 14 5-5-5-5"/><path d="M20 9h-9a7 7 0 0 0 0 14h2"/></svg></button>
         <button class="button toolbar-button" id="boardsBtn" title="Open your saved whiteboards"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M7 8h10M7 12h7M7 16h4"/></svg><span class="library-label">Boards</span></button>
-        <button class="button toolbar-button optional-mobile" id="historyBtn" title="Revision history"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5M12 7v5l3 2"/></svg><span class="library-label">History</span></button>
         <button class="button toolbar-button optional-mobile" id="saveBtn" title="Save this whiteboard now"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M5 3h12l4 4v14H3V3h2Z"/><path d="M7 3v6h10V3M7 21v-8h10v8"/></svg><span class="library-label">Save</span></button>
         <button class="button toolbar-button optional-mobile" id="framesBtn" title="Navigate named frames">Frames</button>
         <button class="button toolbar-button optional-mobile" id="templatesBtn" title="Insert a planning or brainstorming template">Templates</button>
@@ -312,9 +314,13 @@
         <div class="tool-group">
           <div class="group-label">TOOLS</div>
           <button class="tool" data-tool="select" title="Select and move (V)" aria-label="Select and move"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="m5 3 14 10-7 .8-3.3 6.2L5 3Z"/></svg></button>
+          <button class="tool" data-tool="pan" title="Pan canvas (M)" aria-label="Pan canvas"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M8 11V5a2 2 0 0 1 4 0v5-7a2 2 0 0 1 4 0v8-5a2 2 0 0 1 4 0v9a7 7 0 0 1-7 7h-2a7 7 0 0 1-5-2l-3-3a2 2 0 0 1 3-3l2 2"/></svg></button>
           <button class="tool active" data-tool="pen" title="Pen (P)" aria-label="Pen"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="m4 20 4.5-1 10.8-10.8a2.1 2.1 0 0 0-3-3L5.5 16 4 20Z"/><path d="m14.8 6.2 3 3"/></svg></button>
           <button class="tool" data-tool="highlighter" title="Highlighter (H)" aria-label="Highlighter"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="m14 4 6 6-9.5 9.5H4v-6L14 4Z"/><path d="m11 7 6 6M3 22h18"/></svg></button>
+          <button class="tool" data-tool="glitter" title="Rainbow glitter pen (B)" aria-label="Rainbow glitter pen"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="m4 20 4.5-1L19 8.5 15.5 5 5 15.5 4 20Z"/><path d="m14 6.5 3.5 3.5M18.5 2.5v3M17 4h3M6 3v3M4.5 4.5h3M20 14v3M18.5 15.5h3"/></svg></button>
           <button class="tool" data-tool="eraser" title="Pixel eraser (E)" aria-label="Eraser"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="m7 20-4-4a2 2 0 0 1 0-2.8l8.5-8.5a2 2 0 0 1 2.8 0l6 6a2 2 0 0 1 0 2.8L13 20H7Z"/><path d="m8 9 7 7M13 20h8"/></svg></button>
+          <button class="tool" data-tool="strokeEraser" title="Erase an entire stroke (X)" aria-label="Erase entire stroke"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5h16M6 5l1 15h10l1-15M9 9l6 6m0-6-6 6"/></svg></button>
+          <button class="tool" data-tool="laser" title="Laser pointer (K) · fades after drawing" aria-label="Laser pointer"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="7"/><circle cx="12" cy="12" r="2"/><path d="m17 7 4-4M18 3h3v3"/></svg></button>
         </div>
         <div class="rail-separator"></div>
         <div class="tool-group">
@@ -323,6 +329,8 @@
           <button class="tool" data-tool="arrow" title="Arrow (A)" aria-label="Arrow"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20 19 5M9 5h10v10"/></svg></button>
           <button class="tool" data-tool="rect" title="Rectangle (R)" aria-label="Rectangle"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linejoin="round"><rect x="4" y="5" width="16" height="14" rx="1.5"/></svg></button>
           <button class="tool" data-tool="ellipse" title="Ellipse (O)" aria-label="Ellipse"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><ellipse cx="12" cy="12" rx="8" ry="6.5"/></svg></button>
+          <button class="tool" data-tool="triangle" title="Triangle (Q)" aria-label="Triangle"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linejoin="round"><path d="M12 4 21 20H3Z"/></svg></button>
+          <button class="tool" data-tool="rightTriangle" title="Right triangle (U)" aria-label="Right triangle"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linejoin="round"><path d="M4 4v16h16Z"/><path d="M4 16h4v4"/></svg></button>
         </div>
         <div class="rail-separator"></div>
         <div class="tool-group">
@@ -349,9 +357,10 @@
       <main class="workspace-center">
         <div class="canvas-toolbar">
           <div class="tool-description" id="activeToolLabel"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m4 20 4.5-1 10.8-10.8a2.1 2.1 0 0 0-3-3L5.5 16 4 20Z"/></svg><span>Pen</span></div>
+          <div class="selection-mode-control hidden" id="selectionModeGroup"><label for="selectionMode">Select</label><select id="selectionMode" aria-label="Selection mode"><option value="rect">Rectangle</option><option value="lasso">Lasso</option></select></div>
           <span class="toolbar-separator"></span>
           <span class="size-label">Stroke</span>
-          <input type="range" class="size-slider" id="strokeSize" min="1" max="18" value="3" aria-label="Stroke width" />
+          <input type="range" class="size-slider" id="strokeSize" min="1" max="120" value="3" aria-label="Stroke width" />
           <span class="size-value" id="strokeValue">3 px</span>
           <span class="toolbar-separator"></span>
           <div class="zoom-controls" aria-label="Canvas zoom controls">
@@ -360,7 +369,7 @@
             <button class="button" id="zoomInBtn" title="Zoom in (+)" aria-label="Zoom in">+</button>
             <button class="button" id="fitBoardBtn" title="Fit all visible objects (F)">Fit</button>
           </div>
-          <span class="canvas-hint">Right-drag to pan · wheel or buttons to zoom</span>
+          <span class="canvas-hint">Shift + draw for straight lines, squares, and circles · Shift-click to add/remove</span>
         </div>
         <div class="board-wrap">
           <div class="board-stage grid-on" id="boardStage">
@@ -379,7 +388,14 @@
         </div>
         <div class="panel-section">
           <h3>Quick shortcuts</h3>
-          <div class="shortcut"><span>Select / move</span><kbd>V</kbd></div>
+          <div class="shortcut"><span>Select / resize</span><kbd>V</kbd></div>
+          <div class="shortcut"><span>Rectangle / right triangle</span><kbd>R / U</kbd></div>
+          <div class="shortcut"><span>Triangle</span><kbd>Q</kbd></div>
+          <div class="shortcut"><span>Shift-click: add/remove</span><kbd>Shift</kbd></div>
+          <div class="shortcut"><span>Pan tool</span><kbd>M</kbd></div>
+          <div class="shortcut"><span>Rainbow glitter</span><kbd>B</kbd></div>
+          <div class="shortcut"><span>Laser pointer</span><kbd>K</kbd></div>
+          <div class="shortcut"><span>Erase entire stroke</span><kbd>X</kbd></div>
           <div class="shortcut"><span>Pen</span><kbd>P</kbd></div>
           <div class="shortcut"><span>Highlighter</span><kbd>H</kbd></div>
           <div class="shortcut"><span>Eraser</span><kbd>E</kbd></div>
@@ -393,7 +409,7 @@
           <div class="shortcut"><span>Fit board</span><kbd>F</kbd></div>
           <div class="shortcut"><span>Pan canvas</span><kbd>Right-drag</kbd></div>
         </div>
-        <div class="tip-card"><div class="tip-title"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18h6M10 22h4M8 14c-1.2-1-2-2.5-2-4.2a6 6 0 1 1 12 0c0 1.7-.8 3.2-2 4.2-.7.6-1 1-1 2h-6c0-1-.3-1.4-1-2Z"/></svg>Small tip</div><p>Right-click and drag to move around the infinite canvas. Use the zoom controls or mouse wheel to zoom. Ctrl+C copies a selected object; Ctrl+V pastes text, images, or a copied joard. object. Boards autosave locally; connect Supabase for cloud collaboration.</p></div>
+        <div class="tip-card"><div class="tip-title"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18h6M10 22h4M8 14c-1.2-1-2-2.5-2-4.2a6 6 0 1 1 12 0c0 1.7-.8 3.2-2 4.2-.7.6-1 1-1 2h-6c0-1-.3-1.4-1-2Z"/></svg>Small tip</div><p>Use the Pan tool or right-click and drag to move around the infinite canvas. Hold Shift while drawing to make straight lines, squares, and circles. Select assets with a rectangle or lasso, and Shift-click to add or remove assets from a selection. Select an object to resize it using the handles. Glitter is a rainbow pen; the laser pointer fades away and is not saved. Boards autosave locally; public rooms need no password, private rooms ask for one.</p></div>
         <div class="panel-section"><button class="button" id="clearBtn" style="width:100%; color:#c24b55"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M10 11v6m4-6v6M6 7l1 14h10l1-14M9 7V4h6v3"/></svg>Clear whiteboard</button></div>
       </aside>
     </div>
@@ -422,6 +438,7 @@
 
   <script type="module">
     import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+    import { SUPABASE_URL as CONFIG_SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY as CONFIG_SUPABASE_KEY } from './config.js';
 
     const $ = (selector) => document.querySelector(selector);
     const $$ = (selector) => [...document.querySelectorAll(selector)];
@@ -434,16 +451,25 @@
       arrow: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20 19 5M9 5h10v10"/></svg>',
       rect: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linejoin="round"><rect x="4" y="5" width="16" height="14" rx="1.5"/></svg>',
       ellipse: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><ellipse cx="12" cy="12" rx="8" ry="6.5"/></svg>',
+      triangle: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linejoin="round"><path d="M12 4 21 20H3Z"/></svg>',
+      rightTriangle: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linejoin="round"><path d="M4 4v16h16Z"/><path d="M4 16h4v4"/></svg>',
       text: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6V4h16v2M12 4v16m-4 0h8"/></svg>',
       sticky: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linejoin="round"><path d="M5 3h14v13l-5 5H5V3Z"/><path d="M14 21v-5h5"/></svg>'
     };
-    const toolNames = { select:'Select', pen:'Pen', highlighter:'Highlighter', eraser:'Eraser', line:'Line', arrow:'Arrow', rect:'Rectangle', ellipse:'Ellipse', text:'Text', sticky:'Sticky note' };
+    const toolNames = { select:'Select', pan:'Pan canvas', pen:'Pen', glitter:'Rainbow glitter pen', laser:'Laser pointer', highlighter:'Highlighter', eraser:'Pixel eraser', strokeEraser:'Erase entire stroke', line:'Line', arrow:'Arrow', rect:'Rectangle', ellipse:'Ellipse', triangle:'Triangle', rightTriangle:'Right triangle', text:'Text', sticky:'Sticky note' };
     const randomId = () => (crypto?.randomUUID ? crypto.randomUUID() : 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, c => { const r = Math.random()*16|0; return (c==='x'?r:(r&3|8)).toString(16); }));
     const query = new URLSearchParams(location.search);
-    const roomId = query.get('room') || Math.random().toString(36).slice(2, 10);
-    if (!query.get('room')) { query.set('room', roomId); history.replaceState(null, '', `${location.pathname}?${query.toString()}${location.hash}`); }
+    const launchedWithRoom = query.has('room');
+    const newRoomRequested = query.get('new') === '1' || !launchedWithRoom;
+    let activeSupabaseUrl = query.get('sburl') || CONFIG_SUPABASE_URL || localStorage.getItem('canvasly_supabase_url') || '';
+    let activeSupabaseKey = query.get('sbkey') || CONFIG_SUPABASE_KEY || localStorage.getItem('canvasly_supabase_key') || '';
+    const roomId = query.get('room') || randomId();
+    query.set('room', roomId);
+    query.delete('sburl'); query.delete('sbkey'); query.delete('new');
+    history.replaceState(null, '', `${location.pathname}?${query.toString()}${location.hash}`);
     const localKey = `canvasly_board_${roomId}`;
     const boardsKey = 'canvasly_boards';
+    const hadLocalBoardMetadata = Boolean(getBoardMeta(roomId));
     let boardTitle = getBoardMeta(roomId)?.title || `Whiteboard ${roomId.slice(0,6)}`;
     const userId = localStorage.getItem('canvasly_user_id') || randomId();
     localStorage.setItem('canvasly_user_id', userId);
@@ -461,8 +487,13 @@
     let metaTimer = null;
     let lastVersionSignature = '';
     let undoStack = [], redoStack = [];
-    let draft = null, moveState = null, selectedId = null;
+    let draft = null, moveState = null, resizeState = null, selectedId = null;
+    let selectedIds = new Set();
+    let selectionState = null;
+    let selectionMode = localStorage.getItem('joard_selection_mode') === 'lasso' ? 'lasso' : 'rect';
+    let laserTrails = [], laserAnimationFrame = null;
     let supabase = null, channel = null, isOnline = false, connectionAttempt = 0;
+    let roomIsOwner = false, roomIsPublic = true, roomHasPassword = false, roomName = boardTitle;
     let remoteCursors = new Map();
     let remoteDrafts = new Map();
     let lastCursorSent = 0;
@@ -528,7 +559,6 @@
         toast('Local storage is full. Connect cloud sync or remove large pasted images.');
       }
       scheduleBoardMetaSync();
-      scheduleVersionSave();
       updateCounts();
     }
     function loadLocal() {
@@ -544,43 +574,7 @@
       const meta=getBoardMeta(roomId); if(meta?.title)boardTitle=meta.title;
       updateBoardTitleUI();
     }
-    function scheduleVersionSave() {
-      clearTimeout(versionTimer);
-      versionTimer=setTimeout(()=>saveVersionNow('Autosave').catch(err=>console.error('Version save failed:',err)),2200);
-    }
-    function getLocalVersions() {
-      try { const raw=JSON.parse(localStorage.getItem(`canvasly_versions_${roomId}`)||'[]'); return Array.isArray(raw)?raw:[]; }
-      catch { return []; }
-    }
-    async function saveVersionNow(note='Autosave',force=false) {
-      const snapshot=[...items.values()].map(deepCopy);
-      const signature=JSON.stringify({title:boardTitle,items:snapshot});
-      if(!force&&signature===lastVersionSignature)return;
-      if(!force&&getLocalVersions()[0]) {
-        const latest=getLocalVersions()[0];
-        if(latest.title===boardTitle&&JSON.stringify(latest.snapshot||[])===JSON.stringify(snapshot)) {lastVersionSignature=signature;return;}
-      }
-      const entry={id:randomId(),board_id:roomId,title:boardTitle,snapshot,created_at:new Date().toISOString(),note};
-      let versions=[entry,...getLocalVersions().filter(v=>v.id!==entry.id)].slice(0,4);
-      try {
-        // If the browser quota is tight, drop old revisions before giving up on the newest one.
-        while(versions.length>1) {
-          try { localStorage.setItem(`canvasly_versions_${roomId}`,JSON.stringify(versions)); break; }
-          catch { versions.pop(); }
-        }
-        if(versions.length===1) localStorage.setItem(`canvasly_versions_${roomId}`,JSON.stringify(versions));
-      } catch { /* Cloud revisions may still save even when the local quota is full. */ }
-      lastVersionSignature=signature;
-      if(supabase&&isOnline) {
-        const {error}=await supabase.from('whiteboard_versions').insert({id:entry.id,board_id:roomId,title:boardTitle,snapshot,note,created_at:entry.created_at});
-        if(error) { console.error('Could not save revision:',error.message); $('#syncStatus').textContent='Board saved; revision save failed'; }
-        else {
-          // Keep a bounded cloud history to avoid unbounded table growth.
-          const {data:rows}=await supabase.from('whiteboard_versions').select('id').eq('board_id',roomId).order('created_at',{ascending:false}).range(50,1000);
-          if(rows?.length) await supabase.from('whiteboard_versions').delete().eq('board_id',roomId).in('id',rows.map(r=>r.id));
-        }
-      }
-    }
+    // Revision history is intentionally disabled; joard. saves the current board continuously.
     async function loadBoardMetadataRemote() {
       if(!supabase||!isOnline)return false;
       const {data,error}=await supabase.from('whiteboard_boards').select('id,title,updated_at').eq('id',roomId).maybeSingle();
@@ -591,7 +585,7 @@
       return false;
     }
     async function saveBoardMetadataRemote() {
-      if(!supabase||!isOnline)return;
+      if(!supabase||!isOnline||!roomIsOwner)return;
       const {error}=await supabase.from('whiteboard_boards').upsert({id:roomId,title:boardTitle,updated_at:new Date().toISOString()});
       if(error)console.error('Could not save board metadata:',error.message);
     }
@@ -602,7 +596,6 @@
         await saveBoardMetadataRemote();
         for(const item of items.values()) await emitUpsert(item);
       }
-      await saveVersionNow('Manual save',true);
       $('#syncStatus').textContent=isOnline?'Cloud saved':'Saved locally';
       toast(isOnline?'Whiteboard saved to the cloud.':'Whiteboard saved in this browser.');
     }
@@ -636,10 +629,13 @@
       activeTool=tool;
       $$('.tool').forEach(btn=>btn.classList.toggle('active',btn.dataset.tool===tool));
       $('#activeToolLabel').innerHTML=`${svgIcons[tool] || ''}<span>${toolNames[tool] || tool}</span>`;
-      const cursor = tool==='select'?'default':tool==='text'||tool==='sticky'?'crosshair':tool==='eraser'?'cell':'crosshair';
+      $('#selectionModeGroup')?.classList.toggle('hidden',tool!=='select');
+      const cursor = tool==='select'?'default':tool==='pan'?'grab':tool==='text'||tool==='sticky'?'crosshair':tool==='eraser'||tool==='strokeEraser'?'cell':tool==='laser'?'crosshair':'crosshair';
       canvas.style.cursor=cursor;
     }
     $$('.tool').forEach(btn=>btn.addEventListener('click',()=>setTool(btn.dataset.tool)));
+    $('#selectionMode').value=selectionMode;
+    $('#selectionMode').addEventListener('change',e=>{selectionMode=e.target.value==='lasso'?'lasso':'rect';localStorage.setItem('joard_selection_mode',selectionMode);toast(`${selectionMode==='lasso'?'Lasso':'Rectangle'} selection enabled.`);});
     $('#colorPicker').addEventListener('input',e=>setColor(e.target.value));
     $$('.swatch').forEach(btn=>btn.addEventListener('click',()=>setColor(btn.dataset.color)));
     function setColor(color) {
@@ -648,6 +644,8 @@
     }
     $('#strokeSize').addEventListener('input',e=>{strokeWidth=Number(e.target.value);$('#strokeValue').textContent=`${strokeWidth} px`;});
     $('#gridBtn').addEventListener('click',()=>{isGridOn=!isGridOn;stage.classList.toggle('grid-on',isGridOn);$('#gridBtn').style.color=isGridOn?'var(--accent)':'';render();});
+    $('#boardsBtn').addEventListener('click',openBoardManager);
+    $('#saveBtn').addEventListener('click',promptSaveBoard);
     $('#downloadBtn').addEventListener('click', downloadPNG);
     $('#settingsBtn').addEventListener('click', openSettings);
     $('#shareBtn').addEventListener('click', openShare);
@@ -705,15 +703,48 @@
       const boxes=visible.map(bounds);const minX=Math.min(...boxes.map(b=>b.x)),minY=Math.min(...boxes.map(b=>b.y));
       const maxX=Math.max(...boxes.map(b=>b.x+b.w)),maxY=Math.max(...boxes.map(b=>b.y+b.h));
       const bw=Math.max(1,maxX-minX),bh=Math.max(1,maxY-minY),pad=100;
-      camera.zoom=Math.max(.08,Math.min(3.5,(canvas.clientWidth-pad)/ (bw+pad),(canvas.clientHeight-pad)/(bh+pad)));
+      camera.zoom=Math.max(.08,Math.min(3.5,(canvas.clientWidth-pad)/(bw+pad),(canvas.clientHeight-pad)/(bh+pad)));
       camera.x=canvas.clientWidth/2-((minX+maxX)/2)*camera.zoom;
       camera.y=canvas.clientHeight/2-((minY+maxY)/2)*camera.zoom;
       saveView();updateZoomUI();render();renderCursors();
     }
     function makeBase(type, extra={}) { const zIndex=nextLayer;nextLayer+=10;return {id:randomId(),type,color:selectedColor,width:strokeWidth,zIndex,locked:false,hidden:false,authorId:userId,authorName:userName,updatedAt:Date.now(),...extra}; }
+    function setSelection(ids, primary=null) {
+      selectedIds=new Set((ids||[]).filter(id=>items.has(id)));
+      selectedId=primary&&selectedIds.has(primary)?primary:(selectedIds.size?[...selectedIds].at(-1):null);
+      render();
+    }
+    function selectOnly(id) { setSelection(id?[id]:[],id); }
+    function toggleSelection(id) {
+      const next=new Set(selectedIds);
+      if(next.has(id))next.delete(id);else next.add(id);
+      setSelection([...next],next.has(id)?id:null);
+    }
+    function selectedItems() { return [...selectedIds].map(id=>items.get(id)).filter(Boolean); }
+    function updateShapeDraft(d,p,constrain=false) {
+      const start={x:d.x1,y:d.y1};let x2=p.x,y2=p.y;
+      d.shiftConstrain=Boolean(d.shiftConstrain||constrain);
+      const lock=d.shiftConstrain;
+      if((d.type==='line'||d.type==='arrow')&&lock) {
+        const dx=x2-start.x,dy=y2-start.y,dist=Math.hypot(dx,dy),angle=Math.atan2(dy,dx),snap=Math.round(angle/(Math.PI/4))*(Math.PI/4);
+        x2=start.x+Math.cos(snap)*dist;y2=start.y+Math.sin(snap)*dist;
+      } else if(lock&&['rect','ellipse','rightTriangle'].includes(d.type)) {
+        const dx=x2-start.x,dy=y2-start.y,size=Math.max(Math.abs(dx),Math.abs(dy));
+        x2=start.x+(dx<0?-size:size);y2=start.y+(dy<0?-size:size);
+      } else if(lock&&d.type==='triangle') {
+        const dx=x2-start.x,dy=y2-start.y,w=Math.abs(dx),h=w*Math.sqrt(3)/2;
+        x2=start.x+(dx<0?-w:w);y2=start.y+(dy<0?-h:h);
+      }
+      d.x2=x2;d.y2=y2;
+      if(['rect','ellipse','triangle','rightTriangle'].includes(d.type)) {
+        d.x=Math.min(d.x1,x2);d.y=Math.min(d.y1,y2);d.w=Math.abs(x2-d.x1);d.h=Math.abs(y2-d.y1);
+      }
+    }
     function onPointerDown(e) {
-      if (e.button===2) {
-        e.preventDefault();canvas.setPointerCapture(e.pointerId);panState={pointerId:e.pointerId,lastX:e.clientX,lastY:e.clientY};stage.classList.add('panning');canvas.style.cursor='grabbing';return;
+      if (e.button===2 || (e.button===0 && activeTool==='pan')) {
+        e.preventDefault(); canvas.setPointerCapture(e.pointerId);
+        panState={pointerId:e.pointerId,lastX:e.clientX,lastY:e.clientY};
+        stage.classList.add('panning');canvas.style.cursor='grabbing';return;
       }
       if (e.button!==0) return;
       canvas.setPointerCapture(e.pointerId); drawingPointer=e.pointerId;
@@ -722,14 +753,35 @@
       if (activeTool==='sticky') { pendingTextPoint=p; openTextComposer('sticky'); return; }
       if (activeTool==='select') {
         const found=hitTest(p);
-        selectedId=found?.id || null;
-        moveState=found&&!found.locked ? {id:found.id,start:p,before:deepCopy(found),moved:false} : null;
-        render(); return;
+        const selected=selectedId?items.get(selectedId):null;
+        const handle=!e.shiftKey&&selectedIds.size===1&&selected&&!selected.locked?hitResizeHandle(p,selected):null;
+        if(handle) { resizeState={id:selected.id,handle,start:p,before:deepCopy(selected),moved:false};moveState=null;render();return; }
+        if(found && e.shiftKey) { toggleSelection(found.id);moveState=null;return; }
+        if(found) {
+          if(!selectedIds.has(found.id)) selectOnly(found.id);
+          else selectedId=found.id;
+          const movable=selectedItems().filter(item=>!item.locked);
+          moveState=movable.length?{ids:movable.map(item=>item.id),before:movable.map(deepCopy),start:p,moved:false}:null;
+          render();return;
+        }
+        selectionState={pointerId:e.pointerId,mode:selectionMode,start:p,current:p,points:[p],additive:e.shiftKey,initial:[...selectedIds]};
+        if(!e.shiftKey) { selectedIds=new Set(); selectedId=null; }
+        render();return;
       }
-      if (['pen','highlighter','eraser'].includes(activeTool)) {
-        draft=makeBase('stroke',{tool:activeTool,points:[p],composite:activeTool==='eraser'?'destination-out':'source-over',opacity:activeTool==='highlighter'?.28:1,width:activeTool==='highlighter'?Math.max(14,strokeWidth*2.4):strokeWidth});
+      if (activeTool==='strokeEraser') {
+        const found=hitTest(p);
+        if(found&&found.type==='stroke'&&!found.locked) {commitDelete([found.id]);toast('Entire stroke erased.');}
+        else if(found?.locked) toast('That stroke is locked. Unlock it in Layers first.');
+        else if(found) toast('Stroke eraser removes freehand strokes only.');
+        drawingPointer=null;return;
+      }
+      if (['pen','highlighter','eraser','glitter','laser'].includes(activeTool)) {
+        const isLaser=activeTool==='laser';
+        const isGlitter=activeTool==='glitter';
+        const width=activeTool==='highlighter'?Math.max(14,strokeWidth*2.4):isLaser?Math.max(4,strokeWidth):strokeWidth;
+        draft=makeBase('stroke',{tool:activeTool,points:[p],composite:activeTool==='eraser'?'destination-out':'source-over',opacity:activeTool==='highlighter'?.28:1,width,glitter:isGlitter,straightLine:!!e.shiftKey});
       } else {
-        draft=makeBase(activeTool,{x1:p.x,y1:p.y,x2:p.x,y2:p.y});
+        draft=makeBase(activeTool,{x1:p.x,y1:p.y,x2:p.x,y2:p.y,x:p.x,y:p.y,w:0,h:0,shiftConstrain:!!e.shiftKey});
       }
       render();
     }
@@ -739,19 +791,39 @@
         panState.lastX=e.clientX;panState.lastY=e.clientY;render();renderCursors();return;
       }
       const p=pointFromEvent(e); lastBoardPoint=p; $('#coordLabel').textContent=`x: ${Math.round(p.x)}, y: ${Math.round(p.y)}`; sendCursor(p);
-      if (!draft && !moveState) return;
+      if(selectionState&&e.pointerId===selectionState.pointerId) {
+        selectionState.current=p;
+        if(selectionState.mode==='lasso') {
+          const last=selectionState.points[selectionState.points.length-1];
+          if(Math.hypot(p.x-last.x,p.y-last.y)>3/camera.zoom)selectionState.points.push(p);
+        }
+        render();return;
+      }
+      if (!draft && !moveState && !resizeState) return;
       if (draft) {
         if(draft.type==='stroke') {
-          const points=draft.points, last=points[points.length-1];
-          if(Math.hypot(p.x-last.x,p.y-last.y)>0.8) points.push(p);
-        } else { draft.x2=p.x; draft.y2=p.y; if(['rect','ellipse'].includes(draft.type)){draft.x=Math.min(draft.x1,draft.x2);draft.y=Math.min(draft.y1,draft.y2);draft.w=Math.abs(draft.x2-draft.x1);draft.h=Math.abs(draft.y2-draft.y1);} }
+          const start=draft.points[0];
+          if(['pen','highlighter','glitter','eraser'].includes(draft.tool)&&(draft.straightLine||e.shiftKey)) {draft.straightLine=true;draft.points=[start,p];}
+          else { const points=draft.points,last=points[points.length-1]; if(Math.hypot(p.x-last.x,p.y-last.y)>0.8) points.push(p); }
+        } else if(['rect','ellipse','triangle','rightTriangle','line','arrow'].includes(draft.type)) {
+          updateShapeDraft(draft,p,e.shiftKey);
+        }
         if(Date.now()-lastDraftSent>55){lastDraftSent=Date.now();sendBroadcast('item-preview',{item:draft});}
+        render();
+      } else if(resizeState) {
+        const resized=resizeElement(resizeState.before,p,resizeState.handle);
+        resizeState.moved=Math.hypot(p.x-resizeState.start.x,p.y-resizeState.start.y)>2;
+        items.set(resizeState.id,resized);
+        if(Date.now()-lastDraftSent>55){lastDraftSent=Date.now();sendBroadcast('item-preview',{item:{...resized,authorId:userId,authorName:userName,updatedAt:Date.now()}});}
         render();
       } else if(moveState) {
         const dx=p.x-moveState.start.x, dy=p.y-moveState.start.y;
         moveState.moved=Math.hypot(dx,dy)>2;
-        items.set(moveState.id,moveElement(moveState.before,dx,dy));
-        if(Date.now()-lastDraftSent>55){lastDraftSent=Date.now();const preview={...items.get(moveState.id),authorId:userId,authorName:userName,updatedAt:Date.now()};sendBroadcast('item-preview',{item:preview});}
+        moveState.before.forEach(before=>items.set(before.id,moveElement(before,dx,dy)));
+        if(Date.now()-lastDraftSent>55){
+          lastDraftSent=Date.now();
+          moveState.ids.forEach(id=>{const item=items.get(id);if(item)sendBroadcast('item-preview',{item:{...item,authorId:userId,authorName:userName,updatedAt:Date.now()}});});
+        }
         render();
       }
     }
@@ -759,23 +831,51 @@
       if(panState) {
         if(e.pointerId!==panState.pointerId)return;
         panState=null;stage.classList.remove('panning');
-        const cursor=activeTool==='select'?'default':activeTool==='eraser'?'cell':'crosshair';canvas.style.cursor=cursor;saveView();return;
+        canvas.style.cursor=activeTool==='pan'?'grab':activeTool==='select'?'default':activeTool==='eraser'||activeTool==='strokeEraser'?'cell':'crosshair';saveView();return;
       }
       if(drawingPointer!==null && e.pointerId!==drawingPointer) return;
       drawingPointer=null;
+      if(selectionState) {
+        const state=selectionState;selectionState=null;
+        const hits=items.values();
+        const box={x:Math.min(state.start.x,state.current.x),y:Math.min(state.start.y,state.current.y),w:Math.abs(state.current.x-state.start.x),h:Math.abs(state.current.y-state.start.y)};
+        const polygon=state.points;
+        const insidePolygon=(pt,poly)=>{let inside=false;for(let i=0,j=poly.length-1;i<poly.length;j=i++){const a=poly[i],b=poly[j];const cross=((a.y>pt.y)!==(b.y>pt.y))&&(pt.x<(b.x-a.x)*(pt.y-a.y)/(b.y-a.y+Number.EPSILON)+a.x);if(cross)inside=!inside;}return inside;};
+        const selected=[];
+        if(state.mode==='lasso'&&polygon.length>=3) {
+          for(const item of hits){if(item.hidden)continue;const b=bounds(item),center={x:b.x+b.w/2,y:b.y+b.h/2};if(insidePolygon(center,polygon)||polygon.some(pt=>pt.x>=b.x&&pt.x<=b.x+b.w&&pt.y>=b.y&&pt.y<=b.y+b.h))selected.push(item.id);}
+        } else if(box.w>2/camera.zoom||box.h>2/camera.zoom) {
+          for(const item of hits){if(item.hidden)continue;const b=bounds(item);if(b.x<=box.x+box.w&&b.x+b.w>=box.x&&b.y<=box.y+box.h&&b.y+b.h>=box.y)selected.push(item.id);}
+        }
+        const combined=state.additive?new Set(state.initial):new Set();selected.forEach(id=>combined.add(id));
+        setSelection([...combined],selected[selected.length-1]||state.initial[state.initial.length-1]||null);return;
+      }
       if (draft) {
         let item=deepCopy(draft); draft=null;
         if(item.type==='stroke' && item.points.length===1) item.points.push({...item.points[0]});
-        if(['rect','ellipse'].includes(item.type)) { item.x=Math.min(item.x1,item.x2);item.y=Math.min(item.y1,item.y2);item.w=Math.abs(item.x2-item.x1);item.h=Math.abs(item.y2-item.y1);delete item.x1;delete item.y1;delete item.x2;delete item.y2; }
+        if(['rect','ellipse','triangle','rightTriangle'].includes(item.type)) {
+          item.x=Math.min(item.x1,item.x2);item.y=Math.min(item.y1,item.y2);item.w=Math.abs(item.x2-item.x1);item.h=Math.abs(item.y2-item.y1);
+          delete item.x1;delete item.y1;delete item.x2;delete item.y2;delete item.shiftConstrain;
+        } else if(['line','arrow'].includes(item.type)) delete item.shiftConstrain;
+        if(item.tool==='laser') {
+          addLaserTrail(item); sendBroadcast('laser-trail',{item}); sendBroadcast('item-preview-end',{id:item.id}); render(); return;
+        }
         if(['line','arrow'].includes(item.type) && Math.hypot(item.x2-item.x1,item.y2-item.y1)<2) { sendBroadcast('item-preview-end',{id:item.id}); render(); return; }
-        if(item.type==='rect' && item.w<2 || item.type==='ellipse' && item.h<2) { sendBroadcast('item-preview-end',{id:item.id}); render(); return; }
+        if(['rect','ellipse','triangle','rightTriangle'].includes(item.type) && (item.w<2||item.h<2)) { sendBroadcast('item-preview-end',{id:item.id}); render(); return; }
         commitAdd(item); sendBroadcast('item-preview-end',{id:item.id});
+      } else if(resizeState) {
+        const state=resizeState;resizeState=null;
+        if(state.moved) {const after=deepCopy(items.get(state.id));after.updatedAt=Date.now();after.authorId=userId;after.authorName=userName;items.set(after.id,after);commitUpdate(state.before,after);sendBroadcast('item-preview-end',{id:state.id});}
+        else items.set(state.id,state.before);
+        render();
       } else if(moveState) {
         const state=moveState; moveState=null;
         if(state.moved) {
-          const after=deepCopy(items.get(state.id)); after.updatedAt=Date.now(); after.authorId=userId; after.authorName=userName;
-          items.set(state.id,after); commitUpdate(state.before,after); sendBroadcast('item-preview-end',{id:state.id});
-        } else { items.set(state.id,state.before); }
+          const after=state.ids.map(id=>items.get(id)).filter(Boolean).map(item=>({...deepCopy(item),updatedAt:Date.now(),authorId:userId,authorName:userName}));
+          after.forEach(item=>items.set(item.id,item));
+          commitUpdateMany(state.before,after);
+          state.ids.forEach(id=>sendBroadcast('item-preview-end',{id}));
+        } else { state.before.forEach(item=>items.set(item.id,item)); }
         render();
       }
     }
@@ -786,6 +886,36 @@
       else {out.x=(out.x||0)+dx;out.y=(out.y||0)+dy;}
       return out;
     }
+    function hitResizeHandle(p,item) {
+      const b=bounds(item),tolerance=10/camera.zoom;
+      const handles={nw:[b.x,b.y],n:[b.x+b.w/2,b.y],ne:[b.x+b.w,b.y],e:[b.x+b.w,b.y+b.h/2],se:[b.x+b.w,b.y+b.h],s:[b.x+b.w/2,b.y+b.h],sw:[b.x,b.y+b.h],w:[b.x,b.y+b.h/2]};
+      for(const [name,[x,y]] of Object.entries(handles))if(Math.hypot(p.x-x,p.y-y)<=tolerance)return name;
+      return null;
+    }
+    function resizeElement(original,p,handle) {
+      const item=deepCopy(original),b=bounds(original),right=b.x+b.w,bottom=b.y+b.h;
+      let x=b.x,y=b.y,w=b.w,h=b.h;
+      if(handle.includes('w')){x=Math.min(p.x,right-14);w=right-x;}
+      if(handle.includes('e')){x=b.x;w=Math.max(14,p.x-b.x);}
+      if(handle.includes('n')){y=Math.min(p.y,bottom-14);h=bottom-y;}
+      if(handle.includes('s')){y=b.y;h=Math.max(14,p.y-b.y);}
+      if(!handle.includes('e')&&!handle.includes('w')){x=b.x;w=b.w;}
+      if(!handle.includes('n')&&!handle.includes('s')){y=b.y;h=b.h;}
+      const sx=w/Math.max(1,b.w),sy=h/Math.max(1,b.h);
+      const tx=v=>x+(v-b.x)*sx,ty=v=>y+(v-b.y)*sy;
+      if(item.type==='stroke') {item.points=(item.points||[]).map(q=>({x:tx(q.x),y:ty(q.y)}));item.width=Math.max(1,(item.width||2)*Math.sqrt(Math.abs(sx*sy)));}
+      else if(item.type==='line'||item.type==='arrow') {item.x1=tx(item.x1);item.x2=tx(item.x2);item.y1=ty(item.y1);item.y2=ty(item.y2);item.width=Math.max(1,(item.width||2)*Math.sqrt(Math.abs(sx*sy)));}
+      else if(item.type==='text') {item.x=tx(item.x);item.y=ty(item.y);item.fontSize=Math.max(8,Math.min(200,(item.fontSize||22)*Math.sqrt(Math.abs(sx*sy))));}
+      else {item.x=x;item.y=y;item.w=Math.max(14,w);item.h=Math.max(14,h);}
+      return item;
+    }
+    function addLaserTrail(item) {
+      laserTrails.push({item:deepCopy(item),expiresAt:Date.now()+900});
+      if(laserAnimationFrame)return;
+      const animate=()=>{laserTrails=laserTrails.filter(t=>t.expiresAt>Date.now());render();if(laserTrails.length)laserAnimationFrame=requestAnimationFrame(animate);else laserAnimationFrame=null;};
+      laserAnimationFrame=requestAnimationFrame(animate);
+    }
+
     function orderedItems() {
       return [...items.values()].sort((a,b)=>{
         const az=Number.isFinite(a.zIndex)?a.zIndex:0, bz=Number.isFinite(b.zIndex)?b.zIndex:0;
@@ -812,14 +942,24 @@
     }
     function render() {
       if(!ctx || !canvas) return;
+      selectedIds=new Set([...selectedIds].filter(id=>items.has(id)));
+      if(!selectedIds.has(selectedId))selectedId=selectedIds.size?[...selectedIds].at(-1):null;
       const dpr=window.devicePixelRatio || 1, w=canvas.width/dpr, h=canvas.height/dpr;
       ctx.setTransform(dpr,0,0,dpr,0,0); ctx.clearRect(0,0,w,h);
       drawWorldGrid(w,h,dpr);
       ctx.setTransform(dpr*camera.zoom,0,0,dpr*camera.zoom,dpr*camera.x,dpr*camera.y);
       for(const item of orderedItems()) if(!item.hidden&&!remoteDrafts.has(item.id)) drawElement(ctx,item);
       for(const preview of remoteDrafts.values()) if(!preview.hidden) drawElement(ctx,preview);
+      const laserNow=Date.now();
+      for(const trail of laserTrails) {const remaining=Math.max(0,(trail.expiresAt-laserNow)/900);drawElement(ctx,{...trail.item,opacity:remaining});}
       if(draft) drawElement(ctx,draft);
-      if(selectedId && items.has(selectedId) && activeTool==='select'&&!items.get(selectedId).hidden) drawSelection(ctx,items.get(selectedId));
+      if(activeTool==='select') {
+        const chosen=selectedItems().filter(item=>!item.hidden);
+        chosen.forEach(item=>drawSelectionOutline(ctx,item));
+        if(chosen.length===1)drawSelection(ctx,chosen[0]);
+        else if(chosen.length>1)drawGroupSelection(ctx,chosen);
+      }
+      if(selectionState)drawSelectionMarquee(ctx,selectionState);
       updateCountsAndStatus();updateZoomUI();
     }
     function drawElement(c,item) {
@@ -829,11 +969,26 @@
         const pts=item.points||[]; if(!pts.length){c.restore();return;}
         c.beginPath();c.moveTo(pts[0].x,pts[0].y);
         if(pts.length===1)c.lineTo(pts[0].x+.01,pts[0].y+.01);else for(let i=1;i<pts.length;i++)c.lineTo(pts[i].x,pts[i].y);
+        if(item.tool==='laser') { c.shadowColor='#ff3158';c.shadowBlur=18;c.strokeStyle='#ff3158';c.lineWidth=Math.max(4,item.width||4); }
+        if(item.glitter || item.tool==='glitter') {
+          const xs=pts.map(p=>p.x),ys=pts.map(p=>p.y);const grad=c.createLinearGradient(Math.min(...xs),Math.min(...ys),Math.max(...xs)+.01,Math.max(...ys)+.01);
+          ['#ff4d6d','#ff9f1c','#ffe66d','#7cffb2','#35d9ff','#9b7bff','#ff77d8'].forEach((col,i)=>grad.addColorStop(i/6,col));
+          c.strokeStyle=grad;c.lineWidth=Math.max(2,item.width||3);c.shadowColor='#7cffb2';c.shadowBlur=5;
+        }
         c.stroke();
+        if(item.glitter || item.tool==='glitter') {
+          c.shadowBlur=0;c.fillStyle='#ffffff';
+          for(let i=0;i<pts.length;i+=Math.max(2,Math.floor(10/Math.max(.25,camera.zoom)))) { const p=pts[i]; const r=1.2+(i%3)*.65;c.beginPath();c.arc(p.x,p.y,r,0,Math.PI*2);c.fill(); }
+        }
       } else if(item.type==='rect') {
         c.strokeRect(item.x,item.y,item.w,item.h);
       } else if(item.type==='ellipse') {
         c.beginPath();c.ellipse(item.x+item.w/2,item.y+item.h/2,Math.max(.5,item.w/2),Math.max(.5,item.h/2),0,0,Math.PI*2);c.stroke();
+      } else if(item.type==='triangle') {
+        c.beginPath();c.moveTo(item.x+item.w/2,item.y);c.lineTo(item.x+item.w,item.y+item.h);c.lineTo(item.x,item.y+item.h);c.closePath();c.stroke();
+      } else if(item.type==='rightTriangle') {
+        c.beginPath();c.moveTo(item.x,item.y);c.lineTo(item.x,item.y+item.h);c.lineTo(item.x+item.w,item.y+item.h);c.closePath();c.stroke();
+        const mark=Math.min(12,item.w*.22,item.h*.22);if(mark>2){c.beginPath();c.moveTo(item.x,item.y+item.h-mark);c.lineTo(item.x+mark,item.y+item.h-mark);c.lineTo(item.x+mark,item.y+item.h);c.stroke();}
       } else if(item.type==='line' || item.type==='arrow') {
         c.beginPath();c.moveTo(item.x1,item.y1);c.lineTo(item.x2,item.y2);c.stroke();
         if(item.type==='arrow') {
@@ -880,7 +1035,7 @@
         c.beginPath();c.moveTo(x+w*.2,y+h*.72);c.bezierCurveTo(x+w*.04,y+h*.72,x+w*.02,y+h*.49,x+w*.18,y+h*.43);c.bezierCurveTo(x+w*.2,y+h*.13,x+w*.46,y+h*.06,x+w*.58,y+h*.31);c.bezierCurveTo(x+w*.78,y+h*.19,x+w*.95,y+h*.37,x+w*.91,y+h*.55);c.bezierCurveTo(x+w*1.04,y+h*.73,x+w*.87,y+h*.83,x+w*.72,y+h*.82);c.lineTo(x+w*.2,y+h*.82);c.closePath();c.fillStyle=item.diagramType==='azure-service'?'#f0f7ff':'#f8f6ff';c.fill();c.stroke();
         if(item.diagramType!=='cloud'){c.fillStyle=color;c.fillRect(x+w*.35,y+h*.35,w*.3,20);c.fillStyle='#fff';c.font='bold 10px Inter,sans-serif';c.textAlign='center';c.fillText(item.diagramType==='azure-service'?'AZURE':'AWS',x+w*.5,y+h*.45);c.textAlign='left';center(label,x+w*.5,y+h*.68,w*.64);}else center(label,x+w*.5,y+h*.58,w*.6);
       } else if(item.diagramType==='server') {
-        c.fillStyle='#f7faff';c.fillRect(x,y,w,h);c.strokeRect(x,y,w,h);for(let i=0;i<3;i++){const yy=y+15+i* (h-30)/3;c.strokeRect(x+12,yy,w-24,20);c.fillStyle='#33a778';c.beginPath();c.arc(x+22,yy+10,3,0,Math.PI*2);c.fill();c.fillStyle='#d8dce7';c.fillRect(x+34,yy+7,w-57,6);}center(label,x+w/2,y+h-10,w-20);
+        c.fillStyle='#f7faff';c.fillRect(x,y,w,h);c.strokeRect(x,y,w,h);for(let i=0;i<3;i++){const yy=y+15+i*(h-30)/3;c.strokeRect(x+12,yy,w-24,20);c.fillStyle='#33a778';c.beginPath();c.arc(x+22,yy+10,3,0,Math.PI*2);c.fill();c.fillStyle='#d8dce7';c.fillRect(x+34,yy+7,w-57,6);}center(label,x+w/2,y+h-10,w-20);
       } else if(item.diagramType==='wireframe') {
         c.fillStyle='#fff';c.fillRect(x,y,w,h);c.strokeRect(x,y,w,h);c.fillStyle='#f0efff';c.fillRect(x,y,w,25);c.strokeRect(x,y,w,25);for(let i=0;i<3;i++){c.beginPath();c.arc(x+11+i*11,y+12,3,0,Math.PI*2);c.fillStyle=color;c.fill();}c.fillStyle='#f6f7fb';c.fillRect(x+10,y+37,w*.25,h-48);c.strokeRect(x+10,y+37,w*.25,h-48);c.strokeRect(x+w*.32,y+37,w*.59,h*.28);c.strokeRect(x+w*.32,y+h*.55,w*.27,h*.28);c.strokeRect(x+w*.63,y+h*.55,w*.28,h*.28);c.fillStyle='#30364a';c.font='12px Inter,sans-serif';c.fillText(label,x+12,y+h-7);
       } else if(item.diagramType==='mindmap') {
@@ -909,7 +1064,7 @@
     function pasteTextToBoard(text) {
       const center=viewportCenterWorld();const p=lastBoardPoint||{x:center.x-160,y:center.y-50};
       const item=makeBase('text',{x:p.x,y:p.y,text:String(text).replace(/\r/g,''),fontSize:20});
-      commitAdd(item);selectedId=item.id;setTool('select');render();toast('Text pasted onto the whiteboard.');
+      commitAdd(item);setSelection([item.id],item.id);setTool('select');render();toast('Text pasted onto the whiteboard.');
     }
     async function pasteImageToBoard(file) {
       try {
@@ -917,20 +1072,21 @@
         const center=viewportCenterWorld();const scale=Math.min(1,(canvas.clientWidth*.72/camera.zoom)/image.w,(canvas.clientHeight*.72/camera.zoom)/image.h);
         const p=lastBoardPoint||{x:center.x-image.w*scale/2,y:center.y-image.h*scale/2};
         const item=makeBase('image',{x:p.x,y:p.y,w:Math.round(image.w*scale),h:Math.round(image.h*scale),src:image.src,sourceWidth:image.w,sourceHeight:image.h});
-        commitAdd(item);selectedId=item.id;setTool('select');render();toast('Image pasted onto the whiteboard.');
+        commitAdd(item);setSelection([item.id],item.id);setTool('select');render();toast('Image pasted onto the whiteboard.');
       } catch(err) {console.error('Clipboard image paste failed:',err);toast('Could not paste that image. Try copying it again.');}
     }
     function readObjectClipboard() { return clipboardObject ? deepCopy(clipboardObject) : null; }
     function copySelectedObject() {
-      const item=items.get(selectedId);if(!item)return;
-      clipboardObject=deepCopy(item);
-      if(navigator.clipboard?.writeText)navigator.clipboard.writeText('CANVASLY_OBJECT_CLIPBOARD').catch(()=>{});
-      toast('Object copied. Paste inside joard. to duplicate it.');
+      const chosen=selectedItems();if(!chosen.length)return;
+      clipboardObject=chosen.length===1?deepCopy(chosen[0]):{__joardSelectionClipboard:true,items:chosen.map(deepCopy)};
+      if(navigator.clipboard?.writeText)navigator.clipboard.writeText('JOARD_OBJECT_CLIPBOARD').catch(()=>{});
+      toast(chosen.length===1?'Object copied. Paste inside joard. to duplicate it.':`${chosen.length} objects copied.`);
     }
     function pasteCopiedObject() {
       const source=readObjectClipboard();if(!source)return false;
-      const copy=moveElement(source,40/camera.zoom,40/camera.zoom);copy.id=randomId();copy.zIndex=nextLayer;nextLayer+=10;copy.locked=false;copy.hidden=false;copy.updatedAt=Date.now();copy.authorId=userId;copy.authorName=userName;
-      commitAdd(copy);selectedId=copy.id;setTool('select');render();toast('Object duplicated.');return true;
+      const sources=source.__joardSelectionClipboard?source.items:[source];
+      const copies=sources.map(original=>{const copy=moveElement(original,40/camera.zoom,40/camera.zoom);copy.id=randomId();copy.zIndex=nextLayer;nextLayer+=10;copy.locked=false;copy.hidden=false;copy.updatedAt=Date.now();copy.authorId=userId;copy.authorName=userName;return copy;});
+      applyUpserts(copies,true);setSelection(copies.map(item=>item.id),copies[copies.length-1]?.id||null);setTool('select');render();toast(copies.length===1?'Object duplicated.':`${copies.length} objects duplicated.`);return true;
     }
     document.addEventListener('paste',async e=>{
       const focused=document.activeElement;
@@ -939,7 +1095,7 @@
       const imageItem=[...clip.items].find(item=>item.kind==='file'&&item.type.startsWith('image/'));
       if(imageItem) {const file=imageItem.getAsFile();if(file){e.preventDefault();await pasteImageToBoard(file);return;}}
       const text=clip.getData('text/plain');
-      if(text==='CANVASLY_OBJECT_CLIPBOARD') {e.preventDefault();if(!pasteCopiedObject())toast('That copied object is no longer available. Copy it again.');return;}
+      if(text==='JOARD_OBJECT_CLIPBOARD'||text==='CANVASLY_OBJECT_CLIPBOARD') {e.preventDefault();if(!pasteCopiedObject())toast('That copied object is no longer available. Copy it again.');return;}
       if(text) {e.preventDefault();pasteTextToBoard(text);return;}
       if(pasteCopiedObject())e.preventDefault();
     });
@@ -958,7 +1114,10 @@
       if(item.type==='text'){const size=item.fontSize||22;const lines=String(item.text||'').split('\n');return{x:item.x-3,y:item.y-3,w:Math.max(35,...lines.map(line=>line.length*size*.65))+6,h:lines.length*size*1.35+6};}
       return{x:item.x,y:item.y,w:item.w,h:item.h};
     }
-    function drawSelection(c,item) {const b=bounds(item);c.save();c.strokeStyle='#1bd96a';c.lineWidth=1;c.setLineDash([4,3]);c.strokeRect(b.x,b.y,b.w,b.h);c.setLineDash([]);c.fillStyle='#07110b';c.strokeStyle='#7cffb2';[[b.x,b.y],[b.x+b.w,b.y],[b.x,b.y+b.h],[b.x+b.w,b.y+b.h]].forEach(([x,y])=>{c.beginPath();c.rect(x-3,y-3,6,6);c.fill();c.stroke();});c.restore();}
+    function drawSelectionOutline(c,item) {const b=bounds(item);c.save();c.strokeStyle='#7cffb2';c.lineWidth=1/camera.zoom;c.setLineDash([4/camera.zoom,3/camera.zoom]);c.strokeRect(b.x,b.y,b.w,b.h);c.restore();}
+    function drawSelection(c,item) {const b=bounds(item);c.save();c.strokeStyle='#1bd96a';c.lineWidth=1/camera.zoom;c.setLineDash([4/camera.zoom,3/camera.zoom]);c.strokeRect(b.x,b.y,b.w,b.h);c.setLineDash([]);c.fillStyle='#07110b';c.strokeStyle='#7cffb2';const s=6/camera.zoom;[[b.x,b.y],[b.x+b.w/2,b.y],[b.x+b.w,b.y],[b.x+b.w,b.y+b.h/2],[b.x+b.w,b.y+b.h],[b.x+b.w/2,b.y+b.h],[b.x,b.y+b.h],[b.x,b.y+b.h/2]].forEach(([x,y])=>{c.beginPath();c.rect(x-s/2,y-s/2,s,s);c.fill();c.stroke();});c.restore();}
+    function drawGroupSelection(c,chosen) {const boxes=chosen.map(bounds),x=Math.min(...boxes.map(b=>b.x)),y=Math.min(...boxes.map(b=>b.y)),right=Math.max(...boxes.map(b=>b.x+b.w)),bottom=Math.max(...boxes.map(b=>b.y+b.h));c.save();c.strokeStyle='#1bd96a';c.lineWidth=1/camera.zoom;c.setLineDash([7/camera.zoom,4/camera.zoom]);c.strokeRect(x-4/camera.zoom,y-4/camera.zoom,right-x+8/camera.zoom,bottom-y+8/camera.zoom);c.setLineDash([]);c.restore();}
+    function drawSelectionMarquee(c,state) {c.save();c.strokeStyle='#7cffb2';c.fillStyle='rgba(27,217,106,.10)';c.lineWidth=1/camera.zoom;c.setLineDash([5/camera.zoom,3/camera.zoom]);if(state.mode==='lasso'&&state.points.length>1){c.beginPath();c.moveTo(state.points[0].x,state.points[0].y);state.points.slice(1).forEach(p=>c.lineTo(p.x,p.y));c.lineTo(state.current.x,state.current.y);c.stroke();}else{const x=Math.min(state.start.x,state.current.x),y=Math.min(state.start.y,state.current.y),w=Math.abs(state.current.x-state.start.x),h=Math.abs(state.current.y-state.start.y);c.fillRect(x,y,w,h);c.strokeRect(x,y,w,h);}c.restore();}
     function distanceToSegment(p,a,b) {const dx=b.x-a.x,dy=b.y-a.y;const len=dx*dx+dy*dy;if(!len)return Math.hypot(p.x-a.x,p.y-a.y);const t=Math.max(0,Math.min(1,((p.x-a.x)*dx+(p.y-a.y)*dy)/len));return Math.hypot(p.x-(a.x+t*dx),p.y-(a.y+t*dy));}
     function hitTest(p) {
       const arr=orderedItems().reverse();
@@ -977,11 +1136,12 @@
     }
 
     function pushHistory(action) {undoStack.push(deepCopy(action));if(undoStack.length>150)undoStack.shift();redoStack=[];updateCounts();}
-    function commitAdd(item, record=true) {item.updatedAt=item.updatedAt||Date.now();items.set(item.id,item);selectedId=null;render();if(record)pushHistory({kind:'add',items:[item]});emitUpsert(item);localSave();}
+    function commitAdd(item, record=true) {item.updatedAt=item.updatedAt||Date.now();items.set(item.id,item);selectedId=null;selectedIds.clear();render();if(record)pushHistory({kind:'add',items:[item]});emitUpsert(item);localSave();}
     function commitUpdate(before,after,record=true) {items.set(after.id,after);render();if(record)pushHistory({kind:'update',before:[before],after:[after]});emitUpsert(after);localSave();}
+    function commitUpdateMany(beforeItems,afterItems,record=true) {afterItems.forEach(item=>{items.set(item.id,item);emitUpsert(item);});render();if(record)pushHistory({kind:'update',before:beforeItems.map(deepCopy),after:afterItems.map(deepCopy)});localSave();}
     function commitDelete(ids,record=true) {
       const removed=ids.map(id=>items.get(id)).filter(Boolean).map(deepCopy);if(!removed.length)return;
-      ids.forEach(id=>items.delete(id));if(ids.includes(selectedId))selectedId=null;render();
+      ids.forEach(id=>items.delete(id));setSelection([...selectedIds].filter(id=>!ids.includes(id)));render();
       if(record)pushHistory({kind:'delete',items:removed});emitDelete(ids);localSave();
     }
     function applyRemoteUpsert(item) {
@@ -990,7 +1150,7 @@
       remoteDrafts.delete(item.id);const existing=items.get(item.id);
       if(!existing || (item.updatedAt||0)>=(existing.updatedAt||0)) {items.set(item.id,item);render();localSave();}
     }
-    function applyRemoteDelete(ids) {ids.forEach(id=>{items.delete(id);remoteDrafts.delete(id);});if(ids.includes(selectedId))selectedId=null;render();localSave();}
+    function applyRemoteDelete(ids) {ids.forEach(id=>{items.delete(id);remoteDrafts.delete(id);});setSelection([...selectedIds].filter(id=>!ids.includes(id)));render();localSave();}
     function applyUpserts(itemsToAdd,record=false) {itemsToAdd.forEach(item=>{const fresh={...deepCopy(item),updatedAt:Date.now(),authorId:userId,authorName:userName};items.set(fresh.id,fresh);emitUpsert(fresh);});render();localSave();if(record)pushHistory({kind:'add',items:itemsToAdd});}
     function undo() {
       const action=undoStack.pop();if(!action)return;
@@ -1041,19 +1201,82 @@
       for(const item of local) await emitUpsert(item);
       localSave();
     }
+    function askForRoomPassword(info) {
+      return new Promise(resolve=>{
+        let done=false,closeHandler,escapeHandler;
+        const finish=value=>{
+          if(done)return;done=true;
+          if(closeHandler)$('#modalClose').removeEventListener('click',closeHandler);
+          if(escapeHandler)document.removeEventListener('keydown',escapeHandler);
+          resolve(value);
+        };
+        closeHandler=()=>{closeModal();finish(null);};
+        escapeHandler=e=>{if(e.key==='Escape'){e.stopPropagation();closeModal();finish(null);}};
+        $('#modalClose').addEventListener('click',closeHandler);
+        document.addEventListener('keydown',escapeHandler);
+        showModal({title:`Password required · ${info.room_name||info.title||'Private room'}`,description:'This board is password-protected. Enter the password provided by its owner.',icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="10" width="16" height="11" rx="2"/><path d="M8 10V7a4 4 0 1 1 8 0v3"/></svg>',body:'<div class="field"><label for="roomJoinPassword">Room password</label><input id="roomJoinPassword" type="password" maxlength="120" autocomplete="current-password" placeholder="Enter room password" /></div><div class="modal-note">The password is checked by Supabase. It is not added to the room link.</div>',actions:[{label:'Cancel',onClick:()=>{closeModal();finish(null);}},{label:'Join room',primary:true,onClick:()=>{const value=$('#roomJoinPassword').value;closeModal();finish(value);}}]});
+        setTimeout(()=>$('#roomJoinPassword')?.focus(),40);
+      });
+    }
+    async function ensureRoomAccess() {
+      const {data:info,error}=await supabase.rpc('get_whiteboard_room',{p_board_id:roomId});
+      if(error)throw new Error(`Room lookup failed: ${error.message}`);
+      let room=info;
+      if(!room || !room.board_id) {
+        if(!(newRoomRequested||hadLocalBoardMetadata)) {toast('Room not found. Use Boards → Join room and enter its room name.');return false;}
+        const {data:created,error:createError}=await supabase.rpc('create_whiteboard_room',{p_board_id:roomId,p_room_name:boardTitle,p_password:null,p_is_public:true});
+        if(createError || !created?.ok) throw new Error(createError?.message||created?.error||'Could not create the new room.');
+        const {data:createdInfo,error:infoError}=await supabase.rpc('get_whiteboard_room',{p_board_id:roomId});
+        if(infoError||!createdInfo)throw new Error(infoError?.message||'Could not read the new room.');
+        room=createdInfo;
+      }
+      let joined=null;
+      while(!joined?.ok) {
+        let password=null;
+        if(!room.is_public&&!room.is_member) {
+          password=await askForRoomPassword(room);
+          if(password===null)return false;
+        }
+        const {data,error:joinError}=await supabase.rpc('join_whiteboard_room',{p_board_id:roomId,p_room_name:null,p_password:password});
+        if(joinError)throw new Error(joinError.message);
+        if(data?.ok){joined=data;break;}
+        if(data?.error==='Incorrect password') {toast('That room password is incorrect. Try again.');continue;}
+        if(data?.error==='PASSWORD_REQUIRED') continue;
+        toast(data?.error||'You could not join this room.');return false;
+      }
+      roomIsOwner=!!joined.is_owner;roomIsPublic=!!joined.is_public;roomHasPassword=!!joined.has_password;roomName=joined.room_name||room.room_name||boardTitle;
+      if(joined.title)boardTitle=joined.title;
+      storeBoardMeta(roomId,boardTitle,Date.now());updateBoardTitleUI();
+      return true;
+    }
     async function startSync(url,key) {
       connectionAttempt++;const thisAttempt=connectionAttempt;
       if(channel && supabase) {try{await supabase.removeChannel(channel);}catch{}}
       channel=null;supabase=null;isOnline=false;remoteCursors.clear();remoteDrafts.clear();renderCursors();render();
+      url=String(url||'').trim();key=String(key||'').trim();
+      activeSupabaseUrl=url;activeSupabaseKey=key;
       if(!url||!key) {updateConnectionUI('offline');localSave();return;}
       updateConnectionUI('connecting');
-      try {supabase=createClient(url.trim(),key.trim(),{auth:{persistSession:false,autoRefreshToken:false}});}
-      catch(err) {updateConnectionUI('offline');toast(`Connection settings are invalid: ${err.message}`);return;}
-      channel=supabase.channel(`canvasly-${roomId}`,{config:{broadcast:{self:false},presence:{key:userId}}})
+      try {
+        supabase=createClient(url,key,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}});
+        let {data:sessionData,error:sessionError}=await supabase.auth.getSession();
+        if(sessionError)throw sessionError;
+        if(!sessionData?.session) {const {data,error}=await supabase.auth.signInAnonymously();if(error)throw new Error(`Anonymous sign-in failed. Enable anonymous sign-ins in Supabase Authentication settings. ${error.message}`);sessionData=data;}
+        if(thisAttempt!==connectionAttempt)return;
+        localStorage.setItem('canvasly_supabase_url',url);localStorage.setItem('canvasly_supabase_key',key);
+        const permitted=await ensureRoomAccess();
+        if(!permitted){isOnline=false;updateConnectionUI('offline');return;}
+      } catch(err) {
+        if(thisAttempt!==connectionAttempt)return;
+        console.error('Supabase connection failed:',err);isOnline=false;updateConnectionUI('offline');
+        toast(`Could not connect: ${err.message||'Check your Supabase configuration and room access.'}`);return;
+      }
+      channel=supabase.channel(`joard-${roomId}`,{config:{private:true,broadcast:{self:false},presence:{key:userId}}})
         .on('broadcast',{event:'item-upsert'},({payload})=>applyRemoteUpsert(payload?.item))
         .on('broadcast',{event:'items-delete'},({payload})=>applyRemoteDelete(payload?.ids||[]))
         .on('broadcast',{event:'item-preview'},({payload})=>{const item=payload?.item;if(item&&item.authorId!==userId){remoteDrafts.set(item.id,item);render();}})
         .on('broadcast',{event:'item-preview-end'},({payload})=>{if(payload?.id){remoteDrafts.delete(payload.id);render();}})
+        .on('broadcast',{event:'laser-trail'},({payload})=>{if(payload?.item)addLaserTrail(payload.item);})
         .on('broadcast',{event:'cursor'},({payload})=>{if(!payload||payload.userId===userId)return;if(payload.visible===false){remoteCursors.delete(payload.userId);}else remoteCursors.set(payload.userId,payload);renderCursors();})
         .on('presence',{event:'sync'},()=>renderPresence());
       channel.subscribe(async status=>{
@@ -1064,11 +1287,7 @@
           const hasCloudMetadata=await loadBoardMetadataRemote();
           await loadRemoteItems();
           if(!hasCloudMetadata) await saveBoardMetadataRemote();
-          for(const rev of getLocalVersions().slice(0,4)) {
-            const {error:revError}=await supabase.from('whiteboard_versions').upsert({id:rev.id,board_id:roomId,title:rev.title||boardTitle,snapshot:rev.snapshot||[],note:rev.note||'Autosave',created_at:rev.created_at||new Date().toISOString()});
-            if(revError)console.warn('Could not upload local revision:',revError.message);
-          }
-          toast('Connected to live collaboration.');
+          toast('Connected to joard. room.');
         } else if(status==='CHANNEL_ERROR'||status==='TIMED_OUT'||status==='CLOSED') {
           isOnline=false;updateConnectionUI('offline');
           if(status!=='CLOSED')toast(`Live connection status: ${status.toLowerCase().replace('_',' ')}.`);
@@ -1100,303 +1319,326 @@
       }
     }
 
-    function setBoardTitleForId(id,title) {
+    async function setBoardTitleForId(id,title) {
       const clean=String(title||'').trim().slice(0,90)||'Untitled whiteboard';
+      if(supabase) {
+        const {data:info,error:infoError}=await supabase.rpc('get_whiteboard_room',{p_board_id:id});
+        if(infoError) {toast(`Could not check board access: ${infoError.message}`);return false;}
+        if(info&&!info.is_owner) {toast('Only the room owner can rename a shared board.');return false;}
+        if(info) {
+          const {data,error}=await supabase.rpc('update_whiteboard_room_access',{p_board_id:id,p_room_name:clean,p_is_public:!!info.is_public,p_password:null});
+          if(error||!data?.ok) {toast(`Could not rename room: ${error?.message||data?.error||'unknown error'}`);return false;}
+          if(id===roomId){roomName=clean;roomIsPublic=!!info.is_public;roomHasPassword=!!info.has_password;}
+        } else {
+          const {error}=await supabase.from('whiteboard_boards').update({title:clean,updated_at:new Date().toISOString()}).eq('id',id);
+          if(error){toast(`Could not rename board: ${error.message}`);return false;}
+        }
+      }
       storeBoardMeta(id,clean);
       if(id===roomId) {boardTitle=clean;updateBoardTitleUI();localSave();}
-      if(isOnline&&supabase) {
-        if(id===roomId) saveBoardMetadataRemote();
-        else supabase.from('whiteboard_boards').upsert({id,title:clean,updated_at:new Date().toISOString()}).then(({error})=>{if(error)console.error('Board rename failed:',error.message);});
-      }
+      return true;
     }
     function renameBoard(id=roomId) {
       const current=getBoardMeta(id); const title=current?.title||(id===roomId?boardTitle:`Whiteboard ${id.slice(0,6)}`);
-      showModal({title:'Rename whiteboard',description:'Use a name that makes this board easy to find later.',body:`<div class="field"><label for="renameBoardTitle">Whiteboard name</label><input id="renameBoardTitle" maxlength="90" value="${escapeHtml(title)}" /></div>`,actions:[{label:'Cancel',onClick:closeModal},{label:'Save name',primary:true,onClick:()=>{const next=$('#renameBoardTitle').value.trim();if(!next){toast('Enter a name for this whiteboard.');return;}setBoardTitleForId(id,next);closeModal();toast('Whiteboard renamed.');}}]});
+      showModal({title:'Rename whiteboard',description:'Change the saved board name. Shared room names are updated for the owner.',body:`<div class="field"><label for="renameBoardTitle">Whiteboard name</label><input id="renameBoardTitle" maxlength="90" value="${escapeHtml(title)}" /></div>`,actions:[{label:'Cancel',onClick:closeModal},{label:'Save name',primary:true,onClick:async()=>{const next=$('#renameBoardTitle').value.trim();if(!next){toast('Enter a name for this whiteboard.');return;}const ok=await setBoardTitleForId(id,next);if(ok){closeModal();toast('Whiteboard renamed.');}}}]});
       setTimeout(()=>$('#renameBoardTitle')?.select(),40);
     }
-    function createBoard() {
-      showModal({title:'Create a whiteboard',description:'A new saved board will be added to your library.',body:`<div class="field"><label for="newBoardTitle">Whiteboard name</label><input id="newBoardTitle" maxlength="90" value="New whiteboard" /></div>`,actions:[{label:'Cancel',onClick:closeModal},{label:'Create board',primary:true,onClick:()=>{const title=$('#newBoardTitle').value.trim()||'Untitled whiteboard';const id=randomId();storeBoardMeta(id,title);closeModal();const u=new URL(location.href);u.searchParams.set('room',id);location.assign(u.toString());}}]});
-      setTimeout(()=>$('#newBoardTitle')?.select(),40);
+    function escapeHtml(value) {
+      return String(value??'').replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
     }
-    async function openBoardManager() {
-      let boards=readBoardCatalog();
-      if(!boards.some(b=>b.id===roomId))boards.unshift(storeBoardMeta(roomId,boardTitle));
-      if(isOnline&&supabase) {
-        const {data,error}=await supabase.from('whiteboard_boards').select('id,title,updated_at').order('updated_at',{ascending:false}).limit(200);
-        if(!error&&data) {
-          for(const row of data) {
-            const t=Date.parse(row.updated_at||'')||Date.now();
-            storeBoardMeta(row.id,row.title,t);
-          }
-          boards=readBoardCatalog();
-        }
+    function promptSaveBoard() {
+      showModal({
+        title:'Save whiteboard',
+        description:'Name your board so you can find it again in Boards.',
+        body:`<div class="field"><label for="saveBoardTitle">Whiteboard name</label><input id="saveBoardTitle" maxlength="90" value="${escapeHtml(boardTitle)}" placeholder="e.g. Biology revision" /></div>`,
+        actions:[
+          {label:'Cancel',onClick:closeModal},
+          {label:'Save board',primary:true,onClick:async()=>{
+            const title=$('#saveBoardTitle').value.trim();
+            if(!title){toast('Enter a board name first.');return;}
+            const ok=await setBoardTitleForId(roomId,title);
+            if(!ok&&!isOnline)return;
+            boardTitle=title;storeBoardMeta(roomId,title);updateBoardTitleUI();
+            await saveCurrentBoardNow();closeModal();toast('Board saved.');
+          }}
+        ]
+      });
+      setTimeout(()=>$('#saveBoardTitle')?.select(),40);
+    }
+    function openBoardManager() {
+      const catalog=readBoardCatalog();
+      showModal({
+        title:'My whiteboards',
+        description:'Open a saved board, create a new one, or join a shared room.',
+        body:`<div class="library-list" id="boardCatalog"></div>
+          <div class="field"><label for="joinRoomInput">Join a shared room</label><input id="joinRoomInput" placeholder="Paste a room link or enter its room ID" /><span class="field-help">A shared link can include the connection details automatically.</span></div>`,
+        actions:[
+          {label:'Close',onClick:closeModal},
+          {label:'Join room',onClick:()=>joinRoomFromInput()},
+          {label:'+ New board',primary:true,onClick:()=>createNewBoard()}
+        ]
+      });
+      const host=$('#boardCatalog');
+      if(!catalog.length)host.innerHTML='<div class="empty-state">No saved boards yet.<br>Click + New board to begin.</div>';
+      else {
+        host.innerHTML=catalog.map(b=>`<div class="library-row ${b.id===roomId?'current':''}">
+          <div class="library-main"><div class="library-title">${escapeHtml(b.title)}</div><div class="library-meta">${b.id===roomId?'Current board · ':''}${new Date(b.updatedAt||Date.now()).toLocaleString()}</div></div>
+          <div class="library-actions"><button class="button" data-board-open="${escapeHtml(b.id)}">Open</button><button class="button" data-board-rename="${escapeHtml(b.id)}">Rename</button></div>
+        </div>`).join('');
       }
-      boards.sort((a,b)=>(b.updatedAt||0)-(a.updatedAt||0));
-      const body=boards.length?`<div class="library-list">${boards.map(b=>`<div class="library-row ${b.id===roomId?'current':''}"><div class="library-main"><div class="library-title">${escapeHtml(b.title||`Whiteboard ${b.id.slice(0,6)}`)}${b.id===roomId?' · Current':''}</div><div class="library-meta">${b.updatedAt?`Edited ${new Date(b.updatedAt).toLocaleString()}`:'Saved board'} · ${escapeHtml(b.id.slice(0,8))}</div></div><div class="library-actions"><button class="button" data-open-board="${escapeHtml(b.id)}" ${b.id===roomId?'disabled':''}>Open</button><button class="button" data-rename-board="${escapeHtml(b.id)}">Rename</button></div></div>`).join('')}</div>`:'<div class="empty-state">No saved whiteboards yet. Create a board to start your library.</div>';
-      showModal({title:'My whiteboards',description:isOnline?'Boards are saved in this browser and synced to your connected cloud project.':'Boards are autosaved in this browser. Connect Supabase to access the same library from other devices.',body:body+`<div class="modal-note">Local boards remain in this browser even when you close the site. Cloud library and revisions require Supabase.</div>`,actions:[{label:'Close',onClick:closeModal},{label:'History',onClick:()=>{closeModal();openHistory();}},{label:'Save current board',onClick:async()=>{closeModal();await saveCurrentBoardNow();}},{label:'New whiteboard',primary:true,onClick:createBoard}]});
-      $('#modalBody').querySelectorAll('[data-open-board]').forEach(btn=>btn.addEventListener('click',()=>{const id=btn.dataset.openBoard;const u=new URL(location.href);u.searchParams.set('room',id);location.assign(u.toString());}));
-      $('#modalBody').querySelectorAll('[data-rename-board]').forEach(btn=>btn.addEventListener('click',()=>renameBoard(btn.dataset.renameBoard)));
+      host.querySelectorAll('[data-board-open]').forEach(btn=>btn.addEventListener('click',()=>openBoardById(btn.dataset.boardOpen)));
+      host.querySelectorAll('[data-board-rename]').forEach(btn=>btn.addEventListener('click',()=>renameBoard(btn.dataset.boardRename)));
     }
-    async function openHistory() {
-      let versions=getLocalVersions();
-      if(isOnline&&supabase) {
-        const {data,error}=await supabase.from('whiteboard_versions').select('id,board_id,title,snapshot,note,created_at').eq('board_id',roomId).order('created_at',{ascending:false}).limit(50);
-        if(!error&&data) {
-          const byId=new Map(); [...versions,...data].forEach(v=>byId.set(v.id,v));
-          versions=[...byId.values()].sort((a,b)=>(Date.parse(b.created_at)||0)-(Date.parse(a.created_at)||0)).slice(0,50);
-          try {localStorage.setItem(`canvasly_versions_${roomId}`,JSON.stringify(versions.filter(v=>v.snapshot).slice(0,4)));} catch {}
-        } else toast('Could not load cloud revision history. Showing browser history.');
-      }
-      const body=versions.length?`<div class="history-list">${versions.map((v,i)=>`<div class="history-row"><div class="history-copy"><div class="history-title">${escapeHtml(v.note||'Autosave')}</div><div class="history-meta">${escapeHtml(v.title||boardTitle)}<br>${new Date(v.created_at||Date.now()).toLocaleString()} · ${(v.snapshot||[]).length} objects</div></div><button class="button" data-restore-version="${escapeHtml(v.id)}">Restore</button></div>`).join('')}</div>`:'<div class="empty-state">No revisions saved yet. Edits are automatically captured after you pause for a moment.</div>';
-      showModal({title:'Version history',description:'Choose a saved revision to restore the whiteboard to that point in time.',body:body+`<div class="modal-note">${isOnline?'Cloud history is enabled. The most recent revisions are kept.':'Showing revisions saved in this browser. Connect Supabase for cloud history across devices.'}</div>`,actions:[{label:'Close',onClick:closeModal},{label:'Save revision now',primary:true,onClick:async()=>{await saveVersionNow('Manual revision',true);closeModal();toast('Revision saved.');}}]});
-      $('#modalBody').querySelectorAll('[data-restore-version]').forEach(btn=>btn.addEventListener('click',()=>{
-        const entry=versions.find(v=>v.id===btn.dataset.restoreVersion);if(!entry||!Array.isArray(entry.snapshot)){toast('This revision could not be loaded.');return;}
-        showModal({title:'Restore this revision?',description:'The current board will be preserved as a revision before restoring the selected snapshot.',body:`<div class="modal-note">Restore <strong>${escapeHtml(entry.title||'Whiteboard')}</strong> from ${new Date(entry.created_at||Date.now()).toLocaleString()}? This replaces the current whiteboard contents for everyone in the shared room.</div>`,actions:[{label:'Cancel',onClick:closeModal},{label:'Restore revision',primary:true,onClick:()=>restoreVersion(entry)}]});
-      }));
-    }
-    async function restoreVersion(entry) {
+    function createNewBoard() {
       closeModal();
-      await saveVersionNow('Before restore',true);
-      const oldIds=[...items.keys()];
-      items.clear(); imageCache.clear();
-      for(const item of entry.snapshot||[]) if(item&&item.id)items.set(item.id,deepCopy(item));
-      if(entry.title)boardTitle=entry.title;
-      storeBoardMeta(roomId,boardTitle);updateBoardTitleUI();selectedId=null;undoStack=[];redoStack=[];
-      if(oldIds.length)await emitDelete(oldIds);
-      for(const item of items.values())await emitUpsert(item);
-      render();localSave();if(isOnline)await saveBoardMetadataRemote();
-      await saveVersionNow('Restored revision',true);
-      toast('Whiteboard restored to the selected revision.');
+      const id=randomId();
+      const url=new URL(location.href);
+      url.search='';url.searchParams.set('room',id);url.searchParams.set('new','1');
+      location.href=url.toString();
     }
-
-    function createFrameDialog() {
-      showModal({title:'Create a frame',description:'Frames are named areas you can navigate like slides or sections.',body:'<div class="field"><label for="newFrameName">Frame name</label><input id="newFrameName" maxlength="90" value="New section" /></div><div class="field"><label for="frameSize">Starting size</label><select id="frameSize" style="width:100%;padding:10px;border:1px solid #e0e4ed;border-radius:8px;background:#fbfcfe"><option value="900x600">Presentation (900 × 600)</option><option value="1200x800">Large workspace (1200 × 800)</option><option value="1600x900">Widescreen (1600 × 900)</option></select></div>',actions:[{label:'Cancel',onClick:closeModal},{label:'Create frame',primary:true,onClick:()=>{const name=$('#newFrameName').value.trim()||'Untitled frame';const [w,h]=$('#frameSize').value.split('x').map(Number);closeModal();createFrame(name,w,h);}}]});
+    function openBoardById(id) {
+      if(!id)return;
+      if(id===roomId){closeModal();toast('That board is already open.');return;}
+      const url=new URL(location.href);url.search='';url.searchParams.set('room',id);
+      location.href=url.toString();
     }
-    function createFrame(name='New section',w=900,h=600) {
-      const p=viewportCenterWorld(),existing=orderedItems().filter(i=>Number.isFinite(i.zIndex));
-      const minLayer=existing.length?Math.min(...existing.map(i=>i.zIndex)):10;
-      const frame=makeBase('frame',{x:p.x-w/2,y:p.y-h/2,w,h,name,color:'#1bd96a',zIndex:minLayer-10,locked:false,hidden:false});
-      commitAdd(frame);selectedId=frame.id;setTool('select');focusFrame(frame);toast(`Frame “${name}” created.`);
+    function joinRoomFromInput() {
+      const input=$('#joinRoomInput')?.value.trim();
+      if(!input){toast('Paste a shared link or enter a room ID.');return;}
+      try {
+        if(/^https?:\/\//i.test(input)) {
+          const url=new URL(input);
+          if(!url.searchParams.has('room'))throw new Error('That link does not contain a room ID.');
+          location.href=input;return;
+        }
+      } catch(err){toast(err.message||'That is not a valid room link.');return;}
+      const url=new URL(location.href);url.search='';url.searchParams.set('room',input);
+      location.href=url.toString();
     }
-    function focusFrame(frame) {
-      const pad=120;camera.zoom=Math.max(.12,Math.min(2.5,(canvas.clientWidth-pad)/frame.w,(canvas.clientHeight-pad)/frame.h));
-      camera.x=canvas.clientWidth/2-(frame.x+frame.w/2)*camera.zoom;camera.y=canvas.clientHeight/2-(frame.y+frame.h/2)*camera.zoom;
-      saveView();updateZoomUI();render();renderCursors();
+    function openSettings() {
+      showModal({
+        title:'Settings',
+        description:'Choose your display name and configure the shared database connection.',
+        body:`<div class="field"><label for="settingsName">Display name</label><input id="settingsName" maxlength="40" value="${escapeHtml(userName)}" /></div>
+          <div class="field"><label for="settingsUrl">Supabase Project URL</label><input id="settingsUrl" type="url" placeholder="https://your-project.supabase.co" value="${escapeHtml(activeSupabaseUrl)}" /></div>
+          <div class="field"><label for="settingsKey">Supabase publishable key</label><input id="settingsKey" type="password" autocomplete="off" placeholder="sb_publishable_..." value="${escapeHtml(activeSupabaseKey)}" /><span class="field-help">Use a publishable key, never a secret or service-role key.</span></div>
+          <div class="field"><label><input id="settingsRemember" type="checkbox" checked style="width:auto;margin-right:7px" />Remember this connection in this browser</label></div>
+          <div class="modal-note">Anonymous sign-ins must be enabled in Supabase Authentication for shared rooms.</div>`,
+        actions:[
+          {label:'Cancel',onClick:closeModal},
+          {label:'Connect & save',primary:true,onClick:async()=>{
+            const name=$('#settingsName').value.trim()||'Guest';
+            const url=$('#settingsUrl').value.trim(),key=$('#settingsKey').value.trim();
+            userName=name;localStorage.setItem('canvasly_user_name',userName);
+            if($('#settingsRemember').checked){
+              localStorage.setItem('canvasly_supabase_url',url);
+              localStorage.setItem('canvasly_supabase_key',key);
+            } else {
+              localStorage.removeItem('canvasly_supabase_url');
+              localStorage.removeItem('canvasly_supabase_key');
+            }
+            try{if(channel&&supabase)await channel.untrack();}catch{}
+            closeModal();renderPresence();
+            if(url&&key){await startSync(url,key);}
+            else {activeSupabaseUrl='';activeSupabaseKey='';isOnline=false;updateConnectionUI('offline');toast('Using local storage only.');}
+          }}
+        ]
+      });
+    }
+    function openShare() {
+      const roomLink=()=>{
+        const u=new URL(location.href);
+        u.search='';u.searchParams.set('room',roomId);
+        if(activeSupabaseUrl)u.searchParams.set('sburl',activeSupabaseUrl);
+        if(activeSupabaseKey)u.searchParams.set('sbkey',activeSupabaseKey);
+        return u.toString();
+      };
+      showModal({
+        title:'Share joard.',
+        description:'Invite collaborators to this room.',
+        body:`<div class="field"><label for="shareRoomName">Room name</label><input id="shareRoomName" maxlength="90" value="${escapeHtml(roomName||boardTitle)}" /></div>
+          <div class="field"><label for="shareVisibility">Access</label><select id="shareVisibility" style="width:100%;padding:10px;border:1px solid #28553a;border-radius:8px;background:#051008;color:#e1ffea"><option value="public">Public · no password</option><option value="private">Private · password required</option></select></div>
+          <div class="field" id="sharePasswordField"><label for="sharePassword">Room password</label><input id="sharePassword" type="password" maxlength="120" placeholder="Create a room password" /><span class="field-help">Leave blank to keep the current password when changing room settings.</span></div>
+          <div class="field"><label for="shareLink">Share link</label><textarea id="shareLink" readonly rows="3">${escapeHtml(roomLink())}</textarea></div>
+          <div class="modal-note">Anyone with a public-room link can enter that room. The link contains the public connection key, never your database password.</div>`,
+        actions:[
+          {label:'Close',onClick:closeModal},
+          {label:'Copy link',onClick:async()=>{
+            try{await navigator.clipboard.writeText($('#shareLink').value);toast('Share link copied.');}
+            catch{ $('#shareLink').focus();$('#shareLink').select();toast('Select the link and press Ctrl+C.');}
+          }},
+          {label:'Save access & copy',primary:true,onClick:async()=>{
+            if(!supabase||!isOnline){toast('Connect Supabase first to configure shared-room access.');return;}
+            if(!roomIsOwner){toast('Only the room owner can change room access.');return;}
+            const name=$('#shareRoomName').value.trim()||boardTitle;
+            const isPublic=$('#shareVisibility').value==='public';
+            const password=$('#sharePassword').value;
+            if(!isPublic&&!password&&!roomHasPassword){toast('Enter a password for this private room.');return;}
+            const {data,error}=await supabase.rpc('update_whiteboard_room_access',{p_board_id:roomId,p_room_name:name,p_is_public:isPublic,p_password:password||null});
+            if(error||!data?.ok){toast(`Could not update access: ${error?.message||data?.error||'unknown error'}`);return;}
+            roomName=name;roomIsPublic=isPublic;roomHasPassword=!!data.has_password;
+            boardTitle=name;storeBoardMeta(roomId,name);updateBoardTitleUI();closeModal();openShare();
+            setTimeout(async()=>{try{await navigator.clipboard.writeText($('#shareLink').value);toast('Access updated. Share link copied.');}catch{}},80);
+          }}
+        ]
+      });
+      const visibility=$('#shareVisibility'),passwordField=$('#sharePasswordField');
+      if(visibility&&passwordField){
+        visibility.value=roomIsPublic?'public':'private';
+        passwordField.classList.toggle('hidden',visibility.value==='public');
+        visibility.addEventListener('change',()=>passwordField.classList.toggle('hidden',visibility.value==='public'));
+      }
+    }
+    function downloadPNG() {
+      render();
+      try{
+        const a=document.createElement('a');a.download=`${(boardTitle||'joard-board').replace(/[^\w-]+/g,'-')}.png`;
+        a.href=canvas.toDataURL('image/png');a.click();toast('PNG export started.');
+      }catch(err){toast(`Could not export PNG: ${err.message}`);}
     }
     function openFrames() {
-      const frames=orderedItems().filter(item=>item.type==='frame');
-      const body=frames.length?`<div class="frame-list">${frames.map(frame=>`<div class="library-row"><div class="library-main"><div class="library-title">${escapeHtml(frame.name||'Untitled frame')}</div><div class="library-meta">${Math.round(frame.w)} × ${Math.round(frame.h)}${frame.locked?' · Locked':''}</div></div><div class="library-actions"><button class="button" data-frame-focus="${escapeHtml(frame.id)}">Go to</button><button class="button" data-frame-rename="${escapeHtml(frame.id)}">Rename</button><button class="button" data-frame-delete="${escapeHtml(frame.id)}">Delete</button></div></div>`).join('')}</div>`:'<div class="empty-state">No frames yet. Add one to organize this infinite canvas into named areas.</div>';
-      showModal({title:'Frames & sections',description:'Navigate named areas of the board. Frames can be moved, renamed, locked, and focused from this menu.',body:body+`<div class="modal-note">Frames are local to this board and sync with other collaborators when cloud sync is connected.</div>`,actions:[{label:'Close',onClick:closeModal},{label:'New frame',primary:true,onClick:createFrameDialog}]});
-      $('#modalBody').querySelectorAll('[data-frame-focus]').forEach(btn=>btn.addEventListener('click',()=>{const frame=items.get(btn.dataset.frameFocus);if(frame){closeModal();focusFrame(frame);}}));
-      $('#modalBody').querySelectorAll('[data-frame-rename]').forEach(btn=>btn.addEventListener('click',()=>{const frame=items.get(btn.dataset.frameRename);if(frame)editObject(frame);}));
-      $('#modalBody').querySelectorAll('[data-frame-delete]').forEach(btn=>btn.addEventListener('click',()=>{const id=btn.dataset.frameDelete;commitDelete([id]);openFrames();}));
+      const frames=[...items.values()].filter(item=>item.type==='frame');
+      showModal({title:'Frames & sections',description:'Create named sections and jump between them.',body:`<div class="library-list" id="frameList"></div>`,
+        actions:[{label:'Close',onClick:closeModal},{label:'+ New frame',primary:true,onClick:()=>{
+          const c=viewportCenterWorld();const frame=makeBase('frame',{x:c.x-450,y:c.y-290,w:900,h:580,name:`Frame ${frames.length+1}`,color:'#1bd96a'});
+          commitAdd(frame);closeModal();openFrames();
+        }}]});
+      const host=$('#frameList');
+      if(!frames.length)host.innerHTML='<div class="empty-state">No frames yet. Create a frame to organize your canvas into sections.</div>';
+      frames.forEach(frame=>{
+        const row=document.createElement('div');row.className='library-row';
+        const main=document.createElement('div');main.className='library-main';
+        const title=document.createElement('div');title.className='library-title';title.textContent=frame.name||'Frame';
+        const meta=document.createElement('div');meta.className='library-meta';meta.textContent=`${Math.round(frame.w)} × ${Math.round(frame.h)}`;
+        main.append(title,meta);
+        const actions=document.createElement('div');actions.className='library-actions';
+        const go=document.createElement('button');go.className='button';go.textContent='Go to';
+        go.addEventListener('click',()=>{camera.zoom=Math.min(1.5,Math.min((canvas.clientWidth-100)/frame.w,(canvas.clientHeight-100)/frame.h));camera.x=canvas.clientWidth/2-(frame.x+frame.w/2)*camera.zoom;camera.y=canvas.clientHeight/2-(frame.y+frame.h/2)*camera.zoom;saveView();updateZoomUI();render();closeModal();});
+        const rename=document.createElement('button');rename.className='button';rename.textContent='Rename';rename.addEventListener('click',()=>editObject(frame));
+        actions.append(go,rename);row.append(main,actions);host.append(row);
+      });
     }
-    const boardTemplates = {
-      brainstorm: {
-        title:'Brainstorm', subtitle:'Generate ideas, then cluster and prioritize them.',
-        notes:[
-          {x:-315,y:-105,text:'Idea 01\nWhat if…?',fill:'#b5ff3d'},
-          {x:-95,y:-105,text:'Idea 02\nExplore a different angle.',fill:'#7cffb2'},
-          {x:125,y:-105,text:'Idea 03\nBuild on another idea.',fill:'#d5ffd6'},
-          {x:-315,y:65,text:'Questions\nWhat do we need to learn?',fill:'#d5ffd6'},
-          {x:-95,y:65,text:'Opportunities\nWhere is the leverage?',fill:'#b5ff3d'},
-          {x:125,y:65,text:'Next steps\nWhat can we test?',fill:'#7cffb2'}
-        ], noteW:190, noteH:145, titleY:-175
-      },
-      swot: {
-        title:'SWOT analysis', subtitle:'Assess internal strengths and weaknesses alongside external opportunities and threats.',
-        notes:[
-          {x:-250,y:-85,text:'STRENGTHS\nWhat do we do well?',fill:'#7cffb2'},
-          {x:20,y:-85,text:'WEAKNESSES\nWhat needs improving?',fill:'#ffd166'},
-          {x:-250,y:95,text:'OPPORTUNITIES\nWhat could help us grow?',fill:'#b5ff3d'},
-          {x:20,y:95,text:'THREATS\nWhat could hold us back?',fill:'#d5ffd6'}
-        ], noteW:230, noteH:150, titleY:-185
-      },
-      retro: {
-        title:'Sprint retrospective', subtitle:'Make the next sprint better by looking at what happened.',
-        notes:[
-          {x:-340,y:-65,text:'WENT WELL\nWhat should we keep doing?',fill:'#7cffb2'},
-          {x:-110,y:-65,text:'TO IMPROVE\nWhat should change?',fill:'#b5ff3d'},
-          {x:120,y:-65,text:'ACTION ITEMS\nWhat will we try next?',fill:'#d5ffd6'}
-        ], noteW:215, noteH:175, titleY:-145
-      },
-      empathy: {
-        title:'Empathy map', subtitle:'Describe the experience from the user’s perspective.',
-        notes:[
-          {x:-235,y:-85,text:'SAYS\nWhat does the user say out loud?',fill:'#7cffb2'},
-          {x:15,y:-85,text:'THINKS\nWhat might they be thinking?',fill:'#b5ff3d'},
-          {x:-235,y:95,text:'DOES\nWhat actions do they take?',fill:'#d5ffd6'},
-          {x:15,y:95,text:'FEELS\nWhat emotions might they have?',fill:'#90e0ef'}
-        ], noteW:220, noteH:150, titleY:-190
-      },
-      action: {
-        title:'Action plan', subtitle:'Turn discussion into accountable next steps.',
-        notes:[
-          {x:-340,y:-70,text:'TASK\nWhat needs to happen?',fill:'#7cffb2'},
-          {x:-110,y:-70,text:'OWNER\nWho will do it?',fill:'#b5ff3d'},
-          {x:120,y:-70,text:'DUE DATE\nWhen is it due?',fill:'#d5ffd6'}
-        ], noteW:215, noteH:170, titleY:-150
-      }
-    };
     function openTemplateLibrary() {
-      const labels={brainstorm:'Brainstorm',swot:'SWOT analysis',retro:'Sprint retrospective',empathy:'Empathy map',action:'Action plan'};
-      const body=`<div class="diagram-grid template-grid">${Object.entries(boardTemplates).map(([key,t])=>`<button class="diagram-choice" data-template="${key}"><strong>${labels[key]}</strong><span>${t.subtitle}</span></button>`).join('')}</div><div class="modal-note">Templates are inserted at the current canvas center. Each note and heading is a regular object: move, edit, recolor, lock, or delete them individually.</div>`;
-      showModal({title:'Template library',description:'Start with a structure for brainstorming, planning, user research, or team reflection.',body,actions:[{label:'Close',onClick:closeModal}]});
-      $('#modalBody').querySelectorAll('[data-template]').forEach(btn=>btn.addEventListener('click',()=>{const key=btn.dataset.template;closeModal();insertBoardTemplate(key);}));
+      const templates=[
+        {name:'Brainstorm',desc:'Central question with idea notes.',notes:['Main question','Idea 1','Idea 2','Idea 3','Next steps']},
+        {name:'SWOT Analysis',desc:'Strengths, weaknesses, opportunities, threats.',notes:['STRENGTHS','WEAKNESSES','OPPORTUNITIES','THREATS']},
+        {name:'Sprint Retrospective',desc:'What went well, what did not, and actions.',notes:['WENT WELL','TO IMPROVE','ACTION ITEMS']},
+        {name:'Empathy Map',desc:'Think, feel, see, hear, say, do.',notes:['THINK & FEEL','SEE','HEAR','SAY & DO','PAINS','GAINS']},
+        {name:'Action Plan',desc:'Organize tasks, owners, and due dates.',notes:['TASK','OWNER','DUE DATE','STATUS']}
+      ];
+      showModal({title:'Template library',description:'Start with a ready-made planning layout. All items remain editable.',body:`<div class="diagram-grid template-grid">${templates.map((t,i)=>`<button type="button" class="diagram-choice" data-template="${i}"><strong>${escapeHtml(t.name)}</strong><span>${escapeHtml(t.desc)}</span></button>`).join('')}</div>`,actions:[{label:'Close',onClick:closeModal}]});
+      $('#modalBody').querySelectorAll('[data-template]').forEach(btn=>btn.addEventListener('click',()=>{
+        const t=templates[Number(btn.dataset.template)];const center=viewportCenterWorld(),made=[];
+        if(t.name==='Brainstorm'){
+          made.push(makeBase('sticky',{x:center.x-95,y:center.y-200,w:230,h:125,text:t.notes[0],fill:'#12351f',color:'#7cffb2'}));
+          t.notes.slice(1).forEach((n,i)=>made.push(makeBase('sticky',{x:center.x-330+i*165,y:center.y+20,w:150,h:115,text:n})));
+        }else if(t.name==='SWOT Analysis'){
+          t.notes.forEach((n,i)=>made.push(makeBase('sticky',{x:center.x-310+(i%2)*320,y:center.y-180+Math.floor(i/2)*190,w:300,h:170,text:n,fill:['#173522','#332015','#122e39','#352b13'][i],color:'#d9ffe4'})));
+        }else{
+          const gap=25,width=Math.max(170,Math.min(240,760/t.notes.length));
+          t.notes.forEach((n,i)=>made.push(makeBase('sticky',{x:center.x-(t.notes.length*(width+gap)-gap)/2+i*(width+gap),y:center.y-90,w:width,h:220,text:n,fill:['#12351f','#17302b','#183323','#12313a','#2b2714','#302018'][i%6],color:'#d9ffe4'})));
+        }
+        applyUpserts(made,true);closeModal();fitBoard();toast(`${t.name} template added.`);
+      }));
     }
-    function insertBoardTemplate(key) {
-      const def=boardTemplates[key];if(!def)return;
-      const p=viewportCenterWorld();const created=[];
-      created.push(makeBase('text',{x:p.x-220,y:p.y+def.titleY,text:def.title,fontSize:30,color:'#7cffb2'}));
-      created.push(makeBase('text',{x:p.x-220,y:p.y+def.titleY+38,text:def.subtitle,fontSize:13,color:'#1bd96a'}));
-      for(const note of def.notes) created.push(makeBase('sticky',{x:p.x+note.x,y:p.y+note.y,w:def.noteW,h:def.noteH,text:note.text,fill:note.fill,color:'#102318',width:1}));
-      applyUpserts(created,true);selectedId=null;render();saveVersionNow(`Inserted ${def.title} template`,true).catch(()=>{});toast(`${def.title} template added.`);
-    }
-    const boardReactions=[['👍','Agree'],['❤️','Love it'],['💡','Idea'],['👀','Look here'],['✅','Approved'],['❓','Question'],['🎉','Celebrate'],['🚀','Let’s go'],['🤔','Thinking'],['👎','Disagree']];
     function openReactionLibrary() {
-      const body=`<div class="reaction-grid">${boardReactions.map(([emoji,label])=>`<button class="reaction-choice" data-reaction="${emoji}" title="${label}"><span>${emoji}</span><small>${label}</small></button>`).join('')}</div><div class="modal-note">Reactions are placed as editable text objects on the board, so collaborators can see them and move them like other objects. Use them to vote or call attention to an idea.</div>`;
-      showModal({title:'Reactions & voting',description:'Add a reaction stamp to the current board center.',body,actions:[{label:'Close',onClick:closeModal}]});
-      $('#modalBody').querySelectorAll('[data-reaction]').forEach(btn=>btn.addEventListener('click',()=>{const reaction=btn.dataset.reaction;closeModal();addBoardReaction(reaction);}));
+      const reactions=[['👍','Agree'],['👎','Disagree'],['💡','Idea'],['✅','Approved'],['❓','Question'],['🎉','Celebrate'],['❤️','Love'],['⭐','Important'],['👀','Review'],['🚀','Ready']];
+      showModal({title:'Reactions & votes',description:'Choose a reaction stamp and place it on the canvas.',body:`<div class="reaction-grid">${reactions.map((r,i)=>`<button type="button" class="reaction-choice" data-reaction="${i}"><span>${r[0]}</span><small>${r[1]}</small></button>`).join('')}</div>`,actions:[{label:'Close',onClick:closeModal}]});
+      $('#modalBody').querySelectorAll('[data-reaction]').forEach(btn=>btn.addEventListener('click',()=>{
+        const [emoji,label]=reactions[Number(btn.dataset.reaction)],c=viewportCenterWorld();
+        const item=makeBase('text',{x:c.x-22,y:c.y-22,text:emoji+' '+label,fontSize:30});
+        commitAdd(item);setTool('select');closeModal();toast(`${label} reaction added.`);
+      }));
     }
-    function addBoardReaction(reaction) {
-      const p=viewportCenterWorld();const item=makeBase('text',{x:p.x-24,y:p.y-30,text:reaction,fontSize:54,color:selectedColor});
-      commitAdd(item);selectedId=item.id;setTool('select');render();toast(`${reaction} reaction added.`);
-    }
-
-    const diagramDefinitions=[
-      {type:'uml-class',label:'UML class',group:'UML',detail:'Class name, attributes, and methods.'},
-      {type:'use-case',label:'Use case',group:'UML',detail:'Ellipse node for a use-case diagram.'},
-      {type:'database',label:'Database',group:'Architecture',detail:'Database cylinder with an editable label.'},
-      {type:'server',label:'Server',group:'Architecture',detail:'Server stack for infrastructure maps.'},
-      {type:'cloud',label:'Cloud',group:'Architecture',detail:'Generic cloud node for network diagrams.'},
-      {type:'aws-service',label:'AWS service block',group:'Cloud providers',detail:'Generic editable cloud-service block.'},
-      {type:'aws-lambda',label:'AWS Lambda',group:'Cloud providers',detail:'Compute service icon-style block.'},
-      {type:'aws-ec2',label:'AWS EC2',group:'Cloud providers',detail:'Virtual server service block.'},
-      {type:'aws-s3',label:'AWS S3',group:'Cloud providers',detail:'Object-storage service block.'},
-      {type:'aws-rds',label:'AWS RDS',group:'Cloud providers',detail:'Relational database service block.'},
-      {type:'azure-service',label:'Azure service block',group:'Cloud providers',detail:'Generic editable cloud-service block.'},
-      {type:'azure-functions',label:'Azure Functions',group:'Cloud providers',detail:'Serverless compute service block.'},
-      {type:'azure-vm',label:'Azure Virtual Machine',group:'Cloud providers',detail:'Virtual server service block.'},
-      {type:'azure-blob',label:'Azure Blob Storage',group:'Cloud providers',detail:'Object-storage service block.'},
-      {type:'azure-sql',label:'Azure SQL',group:'Cloud providers',detail:'Relational database service block.'},
-      {type:'wireframe',label:'Web wireframe',group:'Wireframes',detail:'Browser panel with placeholder content areas.'},
-      {type:'mindmap',label:'Mind-map node',group:'Planning',detail:'Rounded node for brainstorming maps.'},
-      {type:'kanban',label:'Kanban board',group:'Planning',detail:'Three-column To Do / In Progress / Done board.'}
-    ];
     function openDiagramLibrary() {
-      const body=`<div class="diagram-grid">${diagramDefinitions.map(d=>`<button class="diagram-choice" data-diagram="${d.type}"><strong>${d.label}</strong><span>${d.group} · ${d.detail}</span></button>`).join('')}</div><div class="modal-note">These are editable, label-based architecture symbols rather than official vendor artwork. Double-click a placed shape to edit its label.</div>`;
-      showModal({title:'Diagram library',description:'Add reusable UML, cloud architecture, wireframe, mind-map, and Kanban elements.',body,actions:[{label:'Close',onClick:closeModal}]});
-      $('#modalBody').querySelectorAll('[data-diagram]').forEach(btn=>btn.addEventListener('click',()=>{const def=diagramDefinitions.find(d=>d.type===btn.dataset.diagram);if(def){closeModal();createDiagram(def);}}));
-    }
-    function createDiagram(def) {
-      const p=viewportCenterWorld();let w=210,h=130;
-      if(def.type==='uml-class'){w=210;h=132;}else if(def.type==='database'){w=180;h=150;}else if(def.type==='server'){w=190;h=150;}else if(def.type==='wireframe'){w=330;h=220;}else if(def.type==='kanban'){w=380;h=240;}else if(def.type.startsWith('aws-')||def.type.startsWith('azure-')){w=230;h=84;}else if(def.type==='cloud'){w=220;h=150;}else if(def.type==='mindmap'){w=190;h=85;}
-      const item=makeBase('diagram',{diagramType:def.type,label:def.label,x:p.x-w/2,y:p.y-h/2,w,h});commitAdd(item);selectedId=item.id;setTool('select');render();toast(`${def.label} added.`);
-    }
-    function editObject(item) {
-      const key=item.type==='frame'?'name':(['text','sticky'].includes(item.type)?'text':'label');
-      const value=String(item[key]||'');const title=item.type==='frame'?'Rename frame':item.type==='diagram'?'Edit diagram label':item.type==='sticky'?'Edit sticky note':'Edit text';
-      showModal({title,description:'Update the selected object. Changes sync to collaborators when cloud sync is enabled.',body:`<div class="field"><label for="objectText">${key==='name'?'Frame name':key==='label'?'Shape label':'Text'}</label><textarea id="objectText" maxlength="1200">${escapeHtml(value)}</textarea></div>`,actions:[{label:'Cancel',onClick:closeModal},{label:'Save changes',primary:true,onClick:()=>{const next=$('#objectText').value.trim();if(!next){toast('Enter a value first.');return;}const before=deepCopy(item),after={...deepCopy(item),[key]:next,updatedAt:Date.now(),authorId:userId,authorName:userName};commitUpdate(before,after);closeModal();}}]});
-    }
-    function saveLayerOrder(order) {
-      const before=order.map(item=>deepCopy(item));
-      order.forEach((item,index)=>{item.zIndex=(index+1)*10;item.updatedAt=Date.now();items.set(item.id,item);});
-      const after=order.map(item=>deepCopy(item));nextLayer=Math.max(nextLayer,order.length*10+20);
-      after.forEach(item=>emitUpsert(item));pushHistory({kind:'update',before,after});render();localSave();
-    }
-    function moveLayer(id,direction) {
-      const order=orderedItems(),index=order.findIndex(item=>item.id===id),next=index+direction;
-      if(index<0||next<0||next>=order.length)return;
-      [order[index],order[next]]=[order[next],order[index]];saveLayerOrder(order);
-    }
-    function toggleObjectProperty(id,key) {
-      const item=items.get(id);if(!item)return;const before=deepCopy(item),after={...deepCopy(item),[key]:!item[key],updatedAt:Date.now(),authorId:userId,authorName:userName};
-      if(key==='hidden'&&after.hidden&&selectedId===id)selectedId=null;
-      commitUpdate(before,after);
-    }
-    function layerItemName(item) {
-      if(item.type==='frame')return `Frame · ${item.name||'Untitled'}`;
-      if(item.type==='diagram')return `${item.diagramType||'Diagram'} · ${item.label||'Untitled'}`;
-      if(item.type==='text'||item.type==='sticky')return `${item.type==='sticky'?'Sticky':'Text'} · ${String(item.text||'').split('\n')[0].slice(0,32)}`;
-      return item.type.charAt(0).toUpperCase()+item.type.slice(1);
+      const options=[
+        ['uml-class','UML class','Class name, attributes, methods.'],['use-case','Use case','Use-case ellipse.'],['database','Database','Cylinder-style database.'],
+        ['server','Server','Server stack.'],['cloud','Cloud node','Cloud infrastructure node.'],['aws-lambda','AWS Lambda','AWS-style service block.'],
+        ['aws-ec2','AWS EC2','AWS-style compute block.'],['aws-s3','AWS S3','AWS-style storage block.'],['aws-rds','AWS RDS','AWS-style database block.'],
+        ['azure-functions','Azure Functions','Azure-style function block.'],['azure-vm','Azure VM','Azure-style virtual machine.'],['azure-blob','Azure Blob','Azure-style storage block.'],
+        ['azure-sql','Azure SQL','Azure-style database block.'],['wireframe','Wireframe','Basic web layout.'],['mindmap','Mind map node','Topic or branch.'],['kanban','Kanban board','To do, in progress, done.']
+      ];
+      showModal({title:'Diagram library',description:'Insert an editable diagram object onto the canvas.',body:`<div class="diagram-grid">${options.map((o,i)=>`<button class="diagram-choice" data-diagram="${i}" type="button"><strong>${escapeHtml(o[1])}</strong><span>${escapeHtml(o[2])}</span></button>`).join('')}</div>`,actions:[{label:'Close',onClick:closeModal}]});
+      $('#modalBody').querySelectorAll('[data-diagram]').forEach(btn=>btn.addEventListener('click',()=>{
+        const [diagramType,label]=options[Number(btn.dataset.diagram)],c=viewportCenterWorld();
+        const item=makeBase('diagram',{x:c.x-105,y:c.y-65,w:210,h:130,diagramType,label});
+        commitAdd(item);setTool('select');closeModal();toast(`${label} added.`);
+      }));
     }
     function openLayers() {
-      const asc=orderedItems(),rows=[...asc].reverse();
-      const body=rows.length?`<div class="layer-list">${rows.map((item,visualIndex)=>`<div class="layer-row"><div class="layer-title ${item.hidden?'layer-muted':''}">${escapeHtml(layerItemName(item))}${item.locked?' 🔒':''}${item.hidden?' · Hidden':''}</div><div class="layer-controls"><button class="button" title="Select object" data-layer-select="${escapeHtml(item.id)}">Select</button><button class="button" title="Move forward" data-layer-up="${escapeHtml(item.id)}" ${visualIndex===0?'disabled':''}>↑</button><button class="button" title="Move backward" data-layer-down="${escapeHtml(item.id)}" ${visualIndex===rows.length-1?'disabled':''}>↓</button><button class="button" title="Lock or unlock" data-layer-lock="${escapeHtml(item.id)}">${item.locked?'Unlock':'Lock'}</button><button class="button" title="Show or hide" data-layer-hide="${escapeHtml(item.id)}">${item.hidden?'Show':'Hide'}</button></div></div>`).join('')}</div>`:'<div class="empty-state">No objects on this board yet. Draw, paste, or insert a diagram first.</div>';
-      showModal({title:'Layers & object controls',description:'Higher layers appear above lower layers. Locked objects can be selected but not accidentally moved.',body:body+`<div class="modal-note">Use ↑ / ↓ to change an object’s stacking order. Hidden and locked status is saved with the object and synced to the room.</div>`,actions:[{label:'Close',onClick:closeModal},{label:'Send selected to back',onClick:()=>{if(!selectedId){toast('Select an object first.');return;}const order=orderedItems(),idx=order.findIndex(i=>i.id===selectedId);if(idx>0){const [item]=order.splice(idx,1);order.unshift(item);saveLayerOrder(order);openLayers();}}},{label:'Bring selected to front',primary:true,onClick:()=>{if(!selectedId){toast('Select an object first.');return;}const order=orderedItems(),idx=order.findIndex(i=>i.id===selectedId);if(idx>=0&&idx<order.length-1){const [item]=order.splice(idx,1);order.push(item);saveLayerOrder(order);openLayers();}}}]});
-      $('#modalBody').querySelectorAll('[data-layer-select]').forEach(btn=>btn.addEventListener('click',()=>{selectedId=btn.dataset.layerSelect;closeModal();setTool('select');render();}));
-      $('#modalBody').querySelectorAll('[data-layer-up]').forEach(btn=>btn.addEventListener('click',()=>{moveLayer(btn.dataset.layerUp,1);openLayers();}));
-      $('#modalBody').querySelectorAll('[data-layer-down]').forEach(btn=>btn.addEventListener('click',()=>{moveLayer(btn.dataset.layerDown,-1);openLayers();}));
-      $('#modalBody').querySelectorAll('[data-layer-lock]').forEach(btn=>btn.addEventListener('click',()=>{toggleObjectProperty(btn.dataset.layerLock,'locked');openLayers();}));
-      $('#modalBody').querySelectorAll('[data-layer-hide]').forEach(btn=>btn.addEventListener('click',()=>{toggleObjectProperty(btn.dataset.layerHide,'hidden');openLayers();}));
+      showModal({title:'Layers',description:'Show, hide, lock, reorder, or select objects.',body:`<div id="layerList" class="layer-list"></div>`,actions:[{label:'Close',onClick:closeModal}]});
+      renderLayerList();
     }
-
-    function openSettings() {
-      const url=localStorage.getItem('canvasly_supabase_url')||'';
-      const key=localStorage.getItem('canvasly_supabase_key')||'';
-      showModal({title:'Live collaboration setup',description:'Connect this whiteboard to a Supabase project to sync edits between browsers.',icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-11V5l-8-3-8 3v6c0 7 8 11 8 11Z"/><path d="m9 12 2 2 4-4"/></svg>',body:`
-        <div class="field"><label for="displayName">Your display name</label><input id="displayName" maxlength="35" value="${escapeHtml(userName)}" placeholder="e.g. Alex" /></div>
-        <div class="field"><label for="supabaseUrl">Supabase project URL</label><input id="supabaseUrl" type="url" value="${escapeHtml(url)}" placeholder="https://your-project.supabase.co" autocomplete="off"/><span class="field-help">Found in Supabase → Project Settings → API.</span></div>
-        <div class="field"><label for="supabaseKey">Supabase anon / publishable key</label><input id="supabaseKey" value="${escapeHtml(key)}" placeholder="sb_publishable_… or legacy anon key" autocomplete="off"/><span class="field-help">Use the public anon/publishable key, never a service-role secret.</span></div>
-        <div class="modal-note">Live sync also requires the table and SQL policies in <strong>supabase-setup.sql</strong> from the project files. See README.md for setup steps.</div>
-      `,actions:[{label:'Use local mode',onClick:()=>{localStorage.removeItem('canvasly_supabase_url');localStorage.removeItem('canvasly_supabase_key');startSync('','');closeModal();toast('Local mode enabled.');}},{label:'Connect & save',primary:true,onClick:()=>{
-        const name=$('#displayName').value.trim()||`Guest ${Math.floor(Math.random()*900+100)}`;userName=name;localStorage.setItem('canvasly_user_name',userName);
-        const newUrl=$('#supabaseUrl').value.trim(),newKey=$('#supabaseKey').value.trim();
-        if((newUrl&&!/^https:\/\/.+/.test(newUrl))||(newKey&&!newUrl)){toast('Enter a valid HTTPS project URL and its public key.');return;}
-        if(newUrl&&newKey){localStorage.setItem('canvasly_supabase_url',newUrl);localStorage.setItem('canvasly_supabase_key',newKey);}else{localStorage.removeItem('canvasly_supabase_url');localStorage.removeItem('canvasly_supabase_key');}
-        closeModal();renderPresence();startSync(newUrl,newKey);
+    function renderLayerList() {
+      const host=$('#layerList');if(!host)return;
+      const list=orderedItems().reverse();
+      if(!list.length){host.innerHTML='<div class="empty-state">This board has no objects yet.</div>';return;}
+      host.innerHTML=list.map(item=>`<div class="layer-row">
+        <div class="layer-title ${item.hidden?'layer-muted':''}">${escapeHtml(item.type==='frame'?item.name||'Frame':item.text||item.label||item.type)}</div>
+        <div class="layer-controls"><button class="button" data-layer-select="${item.id}">Select</button><button class="button" data-layer-hide="${item.id}">${item.hidden?'Show':'Hide'}</button><button class="button" data-layer-lock="${item.id}">${item.locked?'Unlock':'Lock'}</button><button class="button" data-layer-up="${item.id}">↑</button><button class="button" data-layer-down="${item.id}">↓</button></div>
+      </div>`).join('');
+      host.querySelectorAll('[data-layer-select]').forEach(b=>b.onclick=()=>{setSelection([b.dataset.layerSelect],b.dataset.layerSelect);});
+      host.querySelectorAll('[data-layer-hide]').forEach(b=>b.onclick=()=>layerChange(b.dataset.layerHide,{hidden:!items.get(b.dataset.layerHide).hidden}));
+      host.querySelectorAll('[data-layer-lock]').forEach(b=>b.onclick=()=>layerChange(b.dataset.layerLock,{locked:!items.get(b.dataset.layerLock).locked}));
+      host.querySelectorAll('[data-layer-up]').forEach(b=>b.onclick=()=>reorderLayer(b.dataset.layerUp,1));
+      host.querySelectorAll('[data-layer-down]').forEach(b=>b.onclick=()=>reorderLayer(b.dataset.layerDown,-1));
+    }
+    function layerChange(id,props) {
+      const before=deepCopy(items.get(id));if(!before)return;
+      const after={...before,...props,updatedAt:Date.now(),authorId:userId,authorName:userName};
+      commitUpdate(before,after);renderLayerList();
+    }
+    function reorderLayer(id,direction) {
+      const sorted=orderedItems(),index=sorted.findIndex(item=>item.id===id);if(index<0)return;
+      const other=sorted[index+direction];if(!other)return;
+      const before=[deepCopy(sorted[index]),deepCopy(other)];
+      const a=items.get(id),b=items.get(other.id),za=a.zIndex||0,zb=b.zIndex||0;
+      a.zIndex=zb;b.zIndex=za;a.updatedAt=b.updatedAt=Date.now();
+      commitUpdateMany(before,[a,b]);renderLayerList();
+    }
+    function editObject(item) {
+      if(!item)return;
+      const isText=item.type==='text'||item.type==='sticky';
+      const current=isText?item.text:item.type==='frame'?item.name:item.label||'';
+      showModal({title:`Edit ${item.type}`,description:'Change the objects text or label.',body:`<div class="field"><label for="objectText">Text / label</label><textarea id="objectText" maxlength="1200">${escapeHtml(current)}</textarea></div>`,actions:[{label:'Cancel',onClick:closeModal},{label:'Save changes',primary:true,onClick:()=>{
+        const before=deepCopy(item),value=$('#objectText').value;
+        if(isText)item.text=value;else if(item.type==='frame')item.name=value;else item.label=value;
+        item.updatedAt=Date.now();commitUpdate(before,deepCopy(item));closeModal();
       }}]});
     }
-    function escapeHtml(str) {return String(str).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
-    function openShare() {
-      const url=new URL(location.href);url.searchParams.set('room',roomId);const link=url.toString();
-      const connected=isOnline;
-      showModal({title:'Share this whiteboard',description:'Send this room link to the people you want to collaborate with.',icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="m8.7 10.7 6.6-4.4M8.7 13.3l6.6 4.4"/></svg>',body:`
-        <div class="field"><label for="shareLink">Room link</label><input id="shareLink" readonly value="${escapeHtml(link)}" /></div>
-        <div class="modal-note" style="${connected?'background:#eaf8f0;border-color:#ccebd9;color:#287b55':''}">${connected?'Live sync is connected. Anyone using this link and the same Supabase project credentials can collaborate.':'This link identifies the room, but live collaboration is not connected yet. Connect Supabase in Settings, then have collaborators configure the same project once.'}</div>
-        <p class="key-note">This starter setup grants broad anonymous access across the table, not just this room. Do not put sensitive information on it; use authenticated room-level policies for private boards.</p>
-      `,actions:[{label:'Close',onClick:closeModal},{label:'Copy link',primary:true,onClick:async()=>{try{await navigator.clipboard.writeText(link);toast('Board link copied.');closeModal();}catch{const input=$('#shareLink');input.select();document.execCommand('copy');toast('Board link copied.');}}}]});
+    function exportItemsJSON() {
+      const blob=new Blob([JSON.stringify([...items.values()],null,2)],{type:'application/json'});
+      const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='joard-board.json';a.click();URL.revokeObjectURL(a.href);
     }
-    async function downloadPNG() {
-      await Promise.all([...items.values()].filter(item=>item.type==='image').map(item=>new Promise(resolve=>{const img=getBoardImage(item);if(img.complete)resolve();else{img.onload=()=>resolve();img.onerror=()=>resolve();}})));
-      const rect=stage.getBoundingClientRect(),scale=2;const output=document.createElement('canvas');output.width=Math.max(1,Math.round(rect.width*scale));output.height=Math.max(1,Math.round(rect.height*scale));const c=output.getContext('2d');
-      c.scale(scale,scale);c.fillStyle='#fff';c.fillRect(0,0,rect.width,rect.height);
-      if(isGridOn){const step=camera.zoom<.25?88:camera.zoom<.5?44:22;for(let x=0;x<rect.width;x+=step*camera.zoom)for(let y=0;y<rect.height;y+=step*camera.zoom){c.fillStyle='rgba(27,217,106,.20)';c.beginPath();c.arc(x,y,.65,0,Math.PI*2);c.fill();}}
-      c.save();c.translate(camera.x,camera.y);c.scale(camera.zoom,camera.zoom);for(const item of orderedItems())if(!item.hidden)drawElement(c,item);c.restore();
-      const a=document.createElement('a');a.download=`joard-${roomId}.png`;a.href=output.toDataURL('image/png');a.click();toast('PNG exported.');
-    }
-
     document.addEventListener('keydown',e=>{
-      const active=document.activeElement;
-      const typing=active&&(['INPUT','TEXTAREA','SELECT'].includes(active.tagName)||active.isContentEditable);
-      if(typing)return;
+      const focused=document.activeElement;
+      if(focused&&(['INPUT','TEXTAREA','SELECT'].includes(focused.tagName)||focused.isContentEditable))return;
       const mod=e.ctrlKey||e.metaKey;
-      if(mod&&e.key.toLowerCase()==='c'&&selectedId){e.preventDefault();copySelectedObject();return;}
-      if(mod&&e.key.toLowerCase()==='x'&&selectedId){e.preventDefault();copySelectedObject();commitDelete([selectedId]);return;}
       if(mod&&e.key.toLowerCase()==='z'){e.preventDefault();e.shiftKey?redo():undo();return;}
       if(mod&&e.key.toLowerCase()==='y'){e.preventDefault();redo();return;}
-      if(mod&&e.key==='0'){e.preventDefault();camera={x:0,y:0,zoom:1};saveView();updateZoomUI();render();renderCursors();return;}
-      if(mod||e.altKey)return;
-      const keys={v:'select',p:'pen',h:'highlighter',e:'eraser',l:'line',a:'arrow',r:'rect',o:'ellipse',t:'text',n:'sticky'};
-      const k=e.key.toLowerCase();
-      if(keys[k]){setTool(keys[k]);return;}
-      if(e.key==='Escape'){closeModal();return;}
-      if((e.key==='Delete'||e.key==='Backspace')&&selectedId){e.preventDefault();commitDelete([selectedId]);return;}
+      if(mod&&e.key.toLowerCase()==='c'){if(selectedIds.size){e.preventDefault();copySelectedObject();}return;}
+      if(mod&&e.key.toLowerCase()==='x'){if(selectedIds.size){e.preventDefault();copySelectedObject();commitDelete([...selectedIds]);}return;}
+      if(mod&&e.key.toLowerCase()==='v')return;
+      if(mod&&e.key.toLowerCase()==='s'){e.preventDefault();promptSaveBoard();return;}
+      if(e.key==='Delete'||e.key==='Backspace'){if(selectedIds.size){e.preventDefault();commitDelete([...selectedIds]);}return;}
+      if(e.key==='Escape'){closeModal();setTool('select');return;}
+      if(mod)return;
+      const shortcuts={v:'select',m:'pan',p:'pen',h:'highlighter',b:'glitter',e:'eraser',x:'strokeEraser',k:'laser',l:'line',a:'arrow',r:'rect',o:'ellipse',q:'triangle',u:'rightTriangle',t:'text',n:'sticky'};
+      const tool=shortcuts[e.key.toLowerCase()];
+      if(tool){e.preventDefault();setTool(tool);return;}
       if(e.key==='+'||e.key==='='){zoomAt(camera.zoom*1.2);return;}
       if(e.key==='-'){zoomAt(camera.zoom/1.2);return;}
-      if(k==='f'){fitBoard();return;}
-      if(k==='g'){isGridOn=!isGridOn;stage.classList.toggle('grid-on',isGridOn);$('#gridBtn').style.color=isGridOn?'var(--accent)':'';render();return;}
+      if(e.key.toLowerCase()==='f'){fitBoard();return;}
+      if(e.key==='0'){camera={x:0,y:0,zoom:1};saveView();updateZoomUI();render();}
     });
-
-    document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='hidden'){localSave();if(supabase&&isOnline){saveBoardMetadataRemote();for(const item of items.values())emitUpsert(item);}saveVersionNow('Autosave').catch(()=>{});}});
-    window.addEventListener('beforeunload',()=>{try{localStorage.setItem(localKey,JSON.stringify([...items.values()]));storeBoardMeta(roomId,boardTitle);}catch{}});
-    storeBoardMeta(roomId,boardTitle,getBoardMeta(roomId)?.updatedAt||Date.now());
-    updateBoardTitleUI();
-    loadLocal();initCanvas();setTool('pen');updateConnectionUI('offline');localSave();updateZoomUI();
-    renderPresence();
-    const savedUrl=localStorage.getItem('canvasly_supabase_url')||'';
-    const savedKey=localStorage.getItem('canvasly_supabase_key')||'';
-    if(savedUrl&&savedKey) startSync(savedUrl,savedKey);
+    window.addEventListener('beforeunload',()=>{try{localSave();}catch{}});
+    loadLocal();
+    initCanvas();
+    setTool('pen');
+    saveView();
+    render();
+    if(activeSupabaseUrl&&activeSupabaseKey)startSync(activeSupabaseUrl,activeSupabaseKey);
+    else updateConnectionUI('offline');
   </script>
 </body>
 </html>
