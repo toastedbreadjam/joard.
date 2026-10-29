@@ -6,6 +6,9 @@
   <meta name="theme-color" content="#07110b" />
   <meta name="description" content="joard. — an infinite collaborative whiteboard with a Matrix-inspired, Modrinth-green interface." />
   <title>joard. — Infinite Collaborative Whiteboard</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Lato:wght@400;700&family=Montserrat:wght@400;600;700&family=Open+Sans:wght@400;600;700&family=Roboto:wght@400;500;700&display=swap" rel="stylesheet" />
   <style>
     :root {
       color-scheme: light;
@@ -67,7 +70,12 @@
     .swatch { width: 16px; height: 16px; border: 1px solid #00000013; border-radius: 50%; cursor: pointer; padding: 0; }
     .swatch.selected { outline: 2px solid #7c73ff; outline-offset: 2px; }
     .workspace-center { min-width: 0; min-height: 0; display: flex; flex-direction: column; position: relative; }
-    .canvas-toolbar { height: 50px; flex: 0 0 50px; display: flex; align-items: center; gap: 9px; padding: 0 20px; background: var(--app-bg); }
+    .canvas-toolbar { min-height: 50px; height: auto; flex: 0 0 auto; display: flex; flex-wrap: wrap; align-items: center; gap: 9px; row-gap: 6px; padding: 7px 20px; background: var(--app-bg); }
+    .text-edit-controls { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; padding: 3px 7px; border: 1px solid #dce3df; border-radius: 8px; background: #f8fbf9; }
+    .text-edit-controls label { color: #617168; font-size: 10px; white-space: nowrap; }
+    .text-edit-controls select { max-width: 132px; min-width: 95px; padding: 5px 7px; border: 1px solid #cbd7ce; border-radius: 6px; background: #fff; color: #23362a; font-size: 11px; }
+    .text-edit-controls input[type="range"] { width: 76px; accent-color: #1bd96a; }
+    .font-size-value { min-width: 34px; color: #617168; font-size: 10px; text-align: right; }
     .tool-description { display: flex; align-items: center; gap: 7px; color: #4c556a; font-weight: 650; font-size: 12px; }
     .tool-description svg { width: 15px; height: 15px; color: var(--accent); }
     .selection-mode-control { display:flex; align-items:center; gap:6px; font-size:10px; color:#8fb79a; white-space:nowrap; }
@@ -222,6 +230,9 @@
     .tool.active::after { background:#1bd96a !important; }
     .tool-description { color:#b8e9c5; }
     .tool-description svg { color:#1bd96a; }
+    .text-edit-controls { background:#0a1b10; border-color:#28543a; }
+    .text-edit-controls label,.font-size-value { color:#9ac6a5; }
+    .text-edit-controls select { background:#061008; border-color:#28543a; color:#d9ffe4; }
     .size-slider,.current-color { accent-color:#1bd96a; }
     .current-color { border-color:#0a170e; outline-color:#2e6840; }
     .swatch { border-color:#24442d; }
@@ -350,6 +361,14 @@
             <button class="swatch" style="background:#00b894" data-color="#00b894" title="Teal" aria-label="Teal"></button>
             <button class="swatch" style="background:#90e0ef" data-color="#90e0ef" title="Ice blue" aria-label="Ice blue"></button>
             <button class="swatch" style="background:#ffd166" data-color="#ffd166" title="Amber" aria-label="Amber"></button>
+            <button class="swatch" style="background:#ff0000" data-color="#ff0000" title="Red" aria-label="Red"></button>
+            <button class="swatch" style="background:#ff7a00" data-color="#ff7a00" title="Orange" aria-label="Orange"></button>
+            <button class="swatch" style="background:#ffff00" data-color="#ffff00" title="Yellow" aria-label="Yellow"></button>
+            <button class="swatch" style="background:#008000" data-color="#008000" title="Green" aria-label="Green"></button>
+            <button class="swatch" style="background:#0066ff" data-color="#0066ff" title="Blue" aria-label="Blue"></button>
+            <button class="swatch" style="background:#4b0082" data-color="#4b0082" title="Indigo" aria-label="Indigo"></button>
+            <button class="swatch" style="background:#8f00ff" data-color="#8f00ff" title="Violet" aria-label="Violet"></button>
+            <button class="swatch" style="background:#ff69b4" data-color="#ff69b4" title="Pink" aria-label="Pink"></button>
           </div>
         </div>
       </aside>
@@ -359,9 +378,27 @@
           <div class="tool-description" id="activeToolLabel"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m4 20 4.5-1 10.8-10.8a2.1 2.1 0 0 0-3-3L5.5 16 4 20Z"/></svg><span>Pen</span></div>
           <div class="selection-mode-control hidden" id="selectionModeGroup"><label for="selectionMode">Select</label><select id="selectionMode" aria-label="Selection mode"><option value="rect">Rectangle</option><option value="lasso">Lasso</option></select></div>
           <span class="toolbar-separator"></span>
-          <span class="size-label">Stroke</span>
-          <input type="range" class="size-slider" id="strokeSize" min="1" max="120" value="3" aria-label="Stroke width" />
+          <span class="size-label">Size</span>
+          <input type="range" class="size-slider" id="strokeSize" min="1" max="120" value="3" aria-label="Shared pen and eraser width" />
           <span class="size-value" id="strokeValue">3 px</span>
+          <div class="text-edit-controls hidden" id="textEditControls" aria-label="Selected text formatting">
+            <label for="textFontFamily">Font</label>
+            <select id="textFontFamily" aria-label="Text font family">
+              <option value="Inter">Inter</option>
+              <option value="Arial">Arial</option>
+              <option value="Roboto">Roboto</option>
+              <option value="Open Sans">Open Sans</option>
+              <option value="Lato">Lato</option>
+              <option value="Montserrat">Montserrat</option>
+              <option value="Georgia">Georgia</option>
+              <option value="Times New Roman">Times New Roman</option>
+              <option value="Courier New">Courier New</option>
+              <option value="Verdana">Verdana</option>
+            </select>
+            <label for="textFontSize">Text size</label>
+            <input type="range" id="textFontSize" min="8" max="200" value="22" aria-label="Selected text font size" />
+            <span class="font-size-value" id="textFontSizeValue">22 px</span>
+          </div>
           <span class="toolbar-separator"></span>
           <div class="zoom-controls" aria-label="Canvas zoom controls">
             <button class="button" id="zoomOutBtn" title="Zoom out (−)" aria-label="Zoom out">−</button>
@@ -457,6 +494,19 @@
       sticky: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linejoin="round"><path d="M5 3h14v13l-5 5H5V3Z"/><path d="M14 21v-5h5"/></svg>'
     };
     const toolNames = { select:'Select', pan:'Pan canvas', pen:'Pen', glitter:'Rainbow glitter pen', laser:'Laser pointer', highlighter:'Highlighter', eraser:'Pixel eraser', strokeEraser:'Erase entire stroke', line:'Line', arrow:'Arrow', rect:'Rectangle', ellipse:'Ellipse', triangle:'Triangle', rightTriangle:'Right triangle', text:'Text', sticky:'Sticky note' };
+    const FONT_STACKS = {
+      'Inter': 'Inter, ui-sans-serif, system-ui, sans-serif',
+      'Arial': 'Arial, Helvetica, sans-serif',
+      'Roboto': 'Roboto, Arial, sans-serif',
+      'Open Sans': '"Open Sans", Arial, sans-serif',
+      'Lato': 'Lato, Arial, sans-serif',
+      'Montserrat': 'Montserrat, Arial, sans-serif',
+      'Georgia': 'Georgia, serif',
+      'Times New Roman': '"Times New Roman", Times, serif',
+      'Courier New': '"Courier New", Courier, monospace',
+      'Verdana': 'Verdana, Geneva, sans-serif'
+    };
+    const fontStackFor = family => FONT_STACKS[family] || FONT_STACKS.Inter;
     const randomId = () => (crypto?.randomUUID ? crypto.randomUUID() : 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, c => { const r = Math.random()*16|0; return (c==='x'?r:(r&3|8)).toString(16); }));
     const query = new URLSearchParams(location.search);
     const launchedWithRoom = query.has('room');
@@ -483,6 +533,7 @@
     let items = new Map();
     let imageCache = new Map();
     let lastBoardPoint = null;
+    let localCursorPoint = null;
     let versionTimer = null;
     let metaTimer = null;
     let lastVersionSignature = '';
@@ -630,8 +681,9 @@
       $$('.tool').forEach(btn=>btn.classList.toggle('active',btn.dataset.tool===tool));
       $('#activeToolLabel').innerHTML=`${svgIcons[tool] || ''}<span>${toolNames[tool] || tool}</span>`;
       $('#selectionModeGroup')?.classList.toggle('hidden',tool!=='select');
-      const cursor = tool==='select'?'default':tool==='pan'?'grab':tool==='text'||tool==='sticky'?'crosshair':tool==='eraser'||tool==='strokeEraser'?'cell':tool==='laser'?'crosshair':'crosshair';
-      canvas.style.cursor=cursor;
+      const cursor = tool==='select'?'default':tool==='pan'?'grab':tool==='text'||tool==='sticky'?'crosshair':tool==='eraser'||tool==='strokeEraser'?'none':tool==='laser'?'crosshair':'crosshair';
+      if(canvas)canvas.style.cursor=cursor;
+      if(ctx)render();
     }
     $$('.tool').forEach(btn=>btn.addEventListener('click',()=>setTool(btn.dataset.tool)));
     $('#selectionMode').value=selectionMode;
@@ -642,7 +694,34 @@
       selectedColor=color; $('#colorPicker').value=color;
       $$('.swatch').forEach(btn=>btn.classList.toggle('selected',btn.dataset.color.toLowerCase()===color.toLowerCase()));
     }
-    $('#strokeSize').addEventListener('input',e=>{strokeWidth=Number(e.target.value);$('#strokeValue').textContent=`${strokeWidth} px`;});
+    $('#strokeSize').addEventListener('input',e=>{strokeWidth=Number(e.target.value);$('#strokeValue').textContent=`${strokeWidth} px`;if(activeTool==='eraser')render();});
+    function editableTextSelection() {
+      const chosen=selectedItems();
+      return chosen.length && chosen.every(item=>item.type==='text'||item.type==='sticky') ? chosen : [];
+    }
+    function updateTextControls() {
+      const control=$('#textEditControls');
+      if(!control)return;
+      const chosen=editableTextSelection();
+      control.classList.toggle('hidden',!chosen.length);
+      if(!chosen.length)return;
+      const item=items.get(selectedId)||chosen[chosen.length-1];
+      const size=Math.max(8,Math.min(200,Number(item.fontSize||(item.type==='sticky'?14:22))));
+      $('#textFontFamily').value=FONT_STACKS[item.fontFamily]?item.fontFamily:'Inter';
+      $('#textFontSize').value=String(size);
+      $('#textFontSizeValue').textContent=`${size} px`;
+    }
+    function applySelectedTextStyle(property,value) {
+      const chosen=editableTextSelection();
+      if(!chosen.length)return;
+      const before=chosen.map(deepCopy);
+      const after=chosen.map(item=>({...deepCopy(item),[property]:value,updatedAt:Date.now(),authorId:userId,authorName:userName}));
+      commitUpdateMany(before,after);
+      after.forEach(item=>sendBroadcast('item-preview-end',{id:item.id}));
+    }
+    $('#textFontFamily').addEventListener('change',e=>applySelectedTextStyle('fontFamily',e.target.value));
+    $('#textFontSize').addEventListener('input',e=>{$('#textFontSizeValue').textContent=`${e.target.value} px`;});
+    $('#textFontSize').addEventListener('change',e=>applySelectedTextStyle('fontSize',Number(e.target.value)));
     $('#gridBtn').addEventListener('click',()=>{isGridOn=!isGridOn;stage.classList.toggle('grid-on',isGridOn);$('#gridBtn').style.color=isGridOn?'var(--accent)':'';render();});
     $('#boardsBtn').addEventListener('click',openBoardManager);
     $('#saveBtn').addEventListener('click',promptSaveBoard);
@@ -673,7 +752,7 @@
       canvas.addEventListener('pointermove', onPointerMove);
       canvas.addEventListener('pointerup', onPointerUp);
       canvas.addEventListener('pointercancel', onPointerUp);
-      canvas.addEventListener('pointerleave',()=>sendCursor(null));
+      canvas.addEventListener('pointerleave',()=>{localCursorPoint=null;sendCursor(null);if(activeTool==='eraser')render();});
       canvas.addEventListener('contextmenu',e=>e.preventDefault());
       canvas.addEventListener('wheel',e=>{
         e.preventDefault();
@@ -778,6 +857,7 @@
       if (['pen','highlighter','eraser','glitter','laser'].includes(activeTool)) {
         const isLaser=activeTool==='laser';
         const isGlitter=activeTool==='glitter';
+        // Pen and pixel eraser share strokeWidth exactly; switching tools never resets the size.
         const width=activeTool==='highlighter'?Math.max(14,strokeWidth*2.4):isLaser?Math.max(4,strokeWidth):strokeWidth;
         draft=makeBase('stroke',{tool:activeTool,points:[p],composite:activeTool==='eraser'?'destination-out':'source-over',opacity:activeTool==='highlighter'?.28:1,width,glitter:isGlitter,straightLine:!!e.shiftKey});
       } else {
@@ -790,7 +870,7 @@
         camera.x+=e.clientX-panState.lastX;camera.y+=e.clientY-panState.lastY;
         panState.lastX=e.clientX;panState.lastY=e.clientY;render();renderCursors();return;
       }
-      const p=pointFromEvent(e); lastBoardPoint=p; $('#coordLabel').textContent=`x: ${Math.round(p.x)}, y: ${Math.round(p.y)}`; sendCursor(p);
+      const p=pointFromEvent(e); lastBoardPoint=p; localCursorPoint=p; $('#coordLabel').textContent=`x: ${Math.round(p.x)}, y: ${Math.round(p.y)}`; sendCursor(p);
       if(selectionState&&e.pointerId===selectionState.pointerId) {
         selectionState.current=p;
         if(selectionState.mode==='lasso') {
@@ -799,7 +879,7 @@
         }
         render();return;
       }
-      if (!draft && !moveState && !resizeState) return;
+      if (!draft && !moveState && !resizeState) {if(activeTool==='eraser')render();return;}
       if (draft) {
         if(draft.type==='stroke') {
           const start=draft.points[0];
@@ -960,6 +1040,11 @@
         else if(chosen.length>1)drawGroupSelection(ctx,chosen);
       }
       if(selectionState)drawSelectionMarquee(ctx,selectionState);
+      if(activeTool==='eraser'&&localCursorPoint) {
+        ctx.save();ctx.globalCompositeOperation='source-over';ctx.globalAlpha=.95;ctx.strokeStyle='#7cffb2';ctx.lineWidth=1/camera.zoom;
+        ctx.beginPath();ctx.arc(localCursorPoint.x,localCursorPoint.y,Math.max(.5,strokeWidth/2),0,Math.PI*2);ctx.stroke();ctx.restore();
+      }
+      updateTextControls();
       updateCountsAndStatus();updateZoomUI();
     }
     function drawElement(c,item) {
@@ -996,11 +1081,22 @@
           c.beginPath();c.moveTo(item.x2,item.y2);c.lineTo(item.x2-len*Math.cos(a-Math.PI/6),item.y2-len*Math.sin(a-Math.PI/6));c.moveTo(item.x2,item.y2);c.lineTo(item.x2-len*Math.cos(a+Math.PI/6),item.y2-len*Math.sin(a+Math.PI/6));c.stroke();
         }
       } else if(item.type==='text') {
-        c.font=`${item.fontSize||22}px Inter, ui-sans-serif, system-ui, sans-serif`; c.textBaseline='top';
-        const lines=String(item.text||'').split('\n');lines.forEach((line,i)=>c.fillText(line,item.x,item.y+i*((item.fontSize||22)*1.35)));
+        const fontSize=item.fontSize||22;c.font=`${fontSize}px ${fontStackFor(item.fontFamily)}`;c.textBaseline='top';
+        const lines=String(item.text||'').split('\n');lines.forEach((line,i)=>c.fillText(line,item.x,item.y+i*(fontSize*1.35)));
       } else if(item.type==='sticky') {
         const w=item.w||190,h=item.h||145;c.shadowColor='#1e293b10';c.shadowBlur=7;c.shadowOffsetY=2;c.fillStyle=item.fill||'#fff2a8';c.strokeStyle='#ebd879';c.lineWidth=1;c.fillRect(item.x,item.y,w,h);c.strokeRect(item.x,item.y,w,h);c.shadowColor='transparent';
-        c.fillStyle='#4c4632';c.font='14px Inter, ui-sans-serif, system-ui, sans-serif';c.textBaseline='top';wrapText(c,String(item.text||''),item.x+13,item.y+13,w-26,20);
+        const padding=12,innerX=item.x+padding,innerY=item.y+padding,innerW=Math.max(1,w-padding*2),innerH=Math.max(1,h-padding*2);
+        const fontSize=Math.max(8,Math.min(200,item.fontSize||14)),lineHeight=fontSize*1.35;
+        c.save();c.beginPath();c.rect(item.x+1,item.y+1,Math.max(0,w-2),Math.max(0,h-2));c.clip();
+        c.fillStyle=item.color||'#4c4632';c.font=`${fontSize}px ${fontStackFor(item.fontFamily)}`;c.textBaseline='top';
+        const lines=wrapTextLines(c,String(item.text||''),innerW),maxLines=Math.max(0,Math.floor(innerH/lineHeight));
+        const visibleLines=lines.slice(0,maxLines);
+        visibleLines.forEach((line,index)=>{
+          let output=line;
+          if(index===maxLines-1&&lines.length>maxLines){while(output&&c.measureText(output+'…').width>innerW)output=output.slice(0,-1);output+='…';}
+          c.fillText(output,innerX,innerY+index*lineHeight);
+        });
+        c.restore();
       } else if(item.type==='image') {
         const img=getBoardImage(item);
         if(img.complete&&img.naturalWidth) c.drawImage(img,item.x,item.y,item.w||img.naturalWidth,item.h||img.naturalHeight);
@@ -1099,19 +1195,42 @@
       if(text) {e.preventDefault();pasteTextToBoard(text);return;}
       if(pasteCopiedObject())e.preventDefault();
     });
-    function wrapText(c,text,x,y,maxWidth,lineHeight) {
-      const paragraphs=text.split('\n');let yy=y;
-      paragraphs.forEach(paragraph=>{
-        const words=paragraph.split(/\s+/);let line='';
-        for(const word of words){const test=line?`${line} ${word}`:word;if(c.measureText(test).width>maxWidth&&line){c.fillText(line,x,yy);yy+=lineHeight;line=word;}else line=test;}
-        c.fillText(line,x,yy);yy+=lineHeight;
-      });
+    function splitLongWord(c,word,maxWidth) {
+      const chunks=[];let chunk='';
+      for(const character of Array.from(word)) {
+        if(chunk&&c.measureText(chunk+character).width>maxWidth){chunks.push(chunk);chunk=character;}
+        else chunk+=character;
+      }
+      if(chunk)chunks.push(chunk);
+      return chunks;
+    }
+    function wrapTextLines(c,text,maxWidth) {
+      const output=[];
+      for(const paragraph of String(text??'').split('\n')) {
+        if(paragraph===''){output.push('');continue;}
+        let line='';
+        for(const word of paragraph.split(/\s+/).filter(Boolean)) {
+          const candidate=line?`${line} ${word}`:word;
+          if(c.measureText(candidate).width<=maxWidth){line=candidate;continue;}
+          if(line){output.push(line);line='';}
+          if(c.measureText(word).width<=maxWidth){line=word;continue;}
+          const chunks=splitLongWord(c,word,maxWidth);
+          if(chunks.length>1)output.push(...chunks.slice(0,-1));
+          line=chunks[chunks.length-1]||'';
+        }
+        output.push(line);
+      }
+      return output;
     }
     function bounds(item) {
       if(item.type==='stroke') {const ps=item.points||[];if(!ps.length)return{x:0,y:0,w:0,h:0};const xs=ps.map(p=>p.x),ys=ps.map(p=>p.y),pad=(item.width||2)/2+3;const x=Math.min(...xs)-pad,y=Math.min(...ys)-pad;return{x,y,w:Math.max(...xs)-Math.min(...xs)+pad*2,h:Math.max(...ys)-Math.min(...ys)+pad*2};}
       if(item.type==='line'||item.type==='arrow'){const pad=(item.width||2)+7;return{x:Math.min(item.x1,item.x2)-pad,y:Math.min(item.y1,item.y2)-pad,w:Math.abs(item.x2-item.x1)+pad*2,h:Math.abs(item.y2-item.y1)+pad*2};}
       if(item.type==='sticky'||item.type==='image')return{x:item.x,y:item.y,w:item.w||(item.type==='sticky'?190:180),h:item.h||(item.type==='sticky'?145:120)};
-      if(item.type==='text'){const size=item.fontSize||22;const lines=String(item.text||'').split('\n');return{x:item.x-3,y:item.y-3,w:Math.max(35,...lines.map(line=>line.length*size*.65))+6,h:lines.length*size*1.35+6};}
+      if(item.type==='text'){
+        const size=item.fontSize||22,lines=String(item.text||'').split('\n');let maxWidth=Math.max(35,...lines.map(line=>line.length*size*.65));
+        if(ctx){ctx.save();ctx.font=`${size}px ${fontStackFor(item.fontFamily)}`;maxWidth=Math.max(35,...lines.map(line=>ctx.measureText(line).width));ctx.restore();}
+        return{x:item.x-3,y:item.y-3,w:maxWidth+6,h:lines.length*size*1.35+6};
+      }
       return{x:item.x,y:item.y,w:item.w,h:item.h};
     }
     function drawSelectionOutline(c,item) {const b=bounds(item);c.save();c.strokeStyle='#7cffb2';c.lineWidth=1/camera.zoom;c.setLineDash([4/camera.zoom,3/camera.zoom]);c.strokeRect(b.x,b.y,b.w,b.h);c.restore();}
@@ -1172,7 +1291,7 @@
     }
     function openTextComposer(kind) {
       const isSticky=kind==='sticky';
-      showModal({title:isSticky?'Add a sticky note':'Add text',description:isSticky?'Write a note for the board.':'Add a text label to the board.',icon:isSticky?'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linejoin="round"><path d="M5 3h14v13l-5 5H5V3Z"/><path d="M14 21v-5h5"/></svg>':'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6V4h16v2M12 4v16m-4 0h8"/></svg>',body:`<div class="field"><label for="composeText">${isSticky?'Note content':'Text content'}</label><textarea id="composeText" maxlength="1200" placeholder="${isSticky?'Capture an idea…':'Type something…'}" autofocus></textarea><span class="field-help">${isSticky?'Sticky notes are 190 × 145 px.':'Line breaks are preserved.'}</span></div>`,actions:[{label:'Cancel',onClick:closeModal},{label:isSticky?'Add note':'Add text',primary:true,onClick:()=>{const text=$('#composeText').value.trim();if(!text){toast('Enter some text first.');return;}const p=pendingTextPoint||{x:80,y:80};const item=isSticky?makeBase('sticky',{x:p.x,y:p.y,w:190,h:145,text,fill:'#fff2a8',color:'#4c4632',width:1}):makeBase('text',{x:p.x,y:p.y,text,fontSize:22});commitAdd(item);closeModal();setTool('select');}}]});
+      showModal({title:isSticky?'Add a sticky note':'Add text',description:isSticky?'Write a note for the board.':'Add a text label to the board.',icon:isSticky?'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linejoin="round"><path d="M5 3h14v13l-5 5H5V3Z"/><path d="M14 21v-5h5"/></svg>':'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6V4h16v2M12 4v16m-4 0h8"/></svg>',body:`<div class="field"><label for="composeText">${isSticky?'Note content':'Text content'}</label><textarea id="composeText" maxlength="1200" placeholder="${isSticky?'Capture an idea…':'Type something…'}" autofocus></textarea><span class="field-help">${isSticky?'Sticky notes are 190 × 145 px.':'Line breaks are preserved.'}</span></div>`,actions:[{label:'Cancel',onClick:closeModal},{label:isSticky?'Add note':'Add text',primary:true,onClick:()=>{const text=$('#composeText').value.trim();if(!text){toast('Enter some text first.');return;}const p=pendingTextPoint||{x:80,y:80};const item=isSticky?makeBase('sticky',{x:p.x,y:p.y,w:190,h:145,text,fill:'#fff2a8',color:'#4c4632',fontSize:14,fontFamily:'Inter',width:1}):makeBase('text',{x:p.x,y:p.y,text,fontSize:22,fontFamily:'Inter'});commitAdd(item);closeModal();setTool('select');}}]});
       setTimeout(()=>$('#composeText')?.focus(),50);
     }
 
@@ -1603,6 +1722,8 @@
       showModal({title:`Edit ${item.type}`,description:'Change the objects text or label.',body:`<div class="field"><label for="objectText">Text / label</label><textarea id="objectText" maxlength="1200">${escapeHtml(current)}</textarea></div>`,actions:[{label:'Cancel',onClick:closeModal},{label:'Save changes',primary:true,onClick:()=>{
         const before=deepCopy(item),value=$('#objectText').value;
         if(isText)item.text=value;else if(item.type==='frame')item.name=value;else item.label=value;
+        if(item.type==='sticky'){item.fontSize=Math.max(8,Math.min(200,Number(item.fontSize||14)));item.fontFamily=item.fontFamily||'Inter';}
+        if(item.type==='text'){item.fontSize=Math.max(8,Math.min(200,Number(item.fontSize||22)));item.fontFamily=item.fontFamily||'Inter';}
         item.updatedAt=Date.now();commitUpdate(before,deepCopy(item));closeModal();
       }}]});
     }

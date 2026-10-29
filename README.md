@@ -11,7 +11,9 @@
 ## Features
 
 - Infinite-style canvas with right-button drag panning, mouse-wheel zoom, plus/minus buttons, fit-to-content, and saved per-board view state.
-- Pen, highlighter, pixel eraser, line, arrow, rectangle, ellipse, text, sticky notes, color picker, stroke size control, and PNG export.
+- Pen, highlighter, pixel eraser, line, arrow, rectangle, ellipse, text, and resizable sticky notes. Pen and pixel eraser share one 1–120 px size control, with a size-matched eraser cursor preview.
+- Select text or sticky notes to change font family and size. Ten font choices are included: Inter, Arial, Roboto, Open Sans, Lato, Montserrat, Georgia, Times New Roman, Courier New, and Verdana. Sticky-note text wraps at word and character boundaries and is clipped to the note so it cannot visibly spill outside.
+- Modrinth green remains the default drawing color; quick swatches also include ROYGBIV colors and pink, plus the existing mint, lime, teal, ice-blue, and amber choices. Clipboard paste for text and images, in-app object copy/cut/paste, and PNG export are supported.
 - Clipboard paste for text and images, plus in-app object copy/cut/paste.
 - Separate whiteboards with create, open, rename, save, local autosave, cloud board library, version snapshots, and point-in-time restoration.
 - Named frames and sections, diagram library with UML, architecture, cloud-provider-style symbols, wireframes, mind maps, and Kanban elements.
